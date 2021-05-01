@@ -194,3 +194,4 @@ dist
 node_modules/.yarn-integrity
 .npmrc
 lib/
+test/.token

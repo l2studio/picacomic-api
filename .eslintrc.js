@@ -1,12 +1,12 @@
 module.exports = {
-  root: true,
   env: {
-    node: true,
-    jest: true
+    node: true
   },
-  parser: '@typescript-eslint/parser',
   extends: ['standard'],
-  rules: {
-    'no-unused-vars': 'warn'
-  }
+  parser: '@typescript-eslint/parser',
+  parserOptions: {
+    ecmaVersion: 11,
+    sourceType: 'module'
+  },
+  plugins: ['@typescript-eslint']
 }
