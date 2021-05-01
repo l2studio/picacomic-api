@@ -1,3 +1,11 @@
 # L2 Studio - PicaComic API
 
-A library for Pica Comic http web api
+A library for PicaComic http web api
+
+## API
+
+TODO
+
+## 协议
+
+Apache-2.0
