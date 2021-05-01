@@ -182,8 +182,8 @@ export class PicaComicAPI {
           page: payload.page || 1
         }
       })
-      .json<Response<{ pages: types.ComicEpisodePages }>>()
-      .then(res => res.data.pages)
+      .json<Response<types.ComicEpisodePages>>()
+      .then(res => res.data)
   }
 
   stringifyImageUrl (image: { fileServer: string, path: string }): string {
