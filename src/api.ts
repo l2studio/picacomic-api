@@ -86,6 +86,7 @@ export class PicaComicAPI {
       hooks: {
         beforeRequest: [
           options => {
+            if (options.context.fetchImage) return // skip image fetch
             const url = options.url.toString()
             const method = options.method
             isDebug && debug('FETCH -> %s %s', method, url)
@@ -200,12 +201,8 @@ export class PicaComicAPI {
     return fileServer + path
   }
 
-  async fetchImage (payload: { token: string, image: { fileServer: string, path: string } }): Promise<Duplex> {
-    const url = this.stringifyImageUrl(payload.image)
-    return this._fetch
-      .stream({
-        url,
-        headers: makeAuthorizationHeaders(payload.token)
-      })
+  async fetchImage (image: { fileServer: string, path: string }): Promise<Duplex> {
+    const url = this.stringifyImageUrl(image)
+    return this._fetch.stream({ prefixUrl: '', url, context: { fetchImage: true } })
   }
 }
