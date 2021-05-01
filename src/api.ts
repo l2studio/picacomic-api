@@ -9,8 +9,8 @@ const debug = require('debug')('lgou2w:picacomic-api')
 const isDebug = typeof process.env.DEBUG !== 'undefined'
 
 export type Options = {
-  timeout: number
-  proxy: {
+  timeout?: number
+  proxy?: {
     host: string
     port: number
   }
