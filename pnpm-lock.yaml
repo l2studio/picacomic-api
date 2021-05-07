@@ -23,6 +23,7 @@ specifiers:
 dependencies:
   debug: 4.3.1
   got: 11.8.2
+  tunnel: 0.0.6
   uuid: 8.3.2
 
 devDependencies:
@@ -39,7 +40,6 @@ devDependencies:
   eslint-plugin-promise: 4.3.1
   rimraf: 3.0.2
   ts-node: 9.1.1_typescript@4.2.4
-  tunnel: 0.0.6
   typescript: 4.2.4
 
 packages:
@@ -1720,7 +1720,7 @@ packages:
   /tunnel/0.0.6:
     resolution: {integrity: sha512-1h/Lnq9yajKY2PEbBadPXj3VxsDDu844OnaAo52UVmIzIvwwtBPIuNvkjuzBlTWpfJyUbG3ez0KSBibQkj4ojg==}
     engines: {node: '>=0.6.11 <=0.7.0 || >=0.7.3'}
-    dev: true
+    dev: false
 
   /type-check/0.4.0:
     resolution: {integrity: sha512-XleUoc9uwGXqjWwXaUTZAmzMcFZ5858QA2vvx1Ur5xIcixXIP+8LnFDgRplU30us6teqdlskFfu+ae4K79Ooew==}

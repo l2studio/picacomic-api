@@ -26,6 +26,7 @@
   "dependencies": {
     "debug": "^4.3.1",
     "got": "^11.8.2",
+    "tunnel": "^0.0.6",
     "uuid": "^8.3.2"
   },
   "devDependencies": {
@@ -42,7 +43,6 @@
     "eslint-plugin-promise": "^4.3.1",
     "rimraf": "^3.0.2",
     "ts-node": "^9.1.1",
-    "tunnel": "^0.0.6",
     "typescript": "^4.2.4"
   }
 }
