@@ -6,7 +6,6 @@ import { createHmac } from 'crypto'
 import got from 'got'
 
 const debug = require('debug')('lgou2w:picacomic-api')
-const isDebug = typeof process.env.DEBUG !== 'undefined'
 
 export type Options = {
   timeout?: number
@@ -89,7 +88,7 @@ export class PicaComicAPI {
             if (options.context.fetchImage) return // skip image fetch
             const url = options.url.toString()
             const method = options.method
-            isDebug && debug('FETCH -> %s %s', method, url)
+            debug.enabled && debug('FETCH -> %s %s', method, url)
             const {
               api, apiKey, signatureKey,
               channel, version, uuid, platform, buildVersion,
