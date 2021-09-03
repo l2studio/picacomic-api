@@ -17,9 +17,6 @@
     "lint": "eslint --ext .js,.ts,.tsx --ignore-path .gitignore .",
     "prepublishOnly": "npm run lint && npm run build"
   },
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com/l2studio"
-  },
   "files": [
     "lib"
   ],
