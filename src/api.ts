@@ -26,6 +26,8 @@ export type Options = {
     userAgent: string
     imageQuality: 'original' | 'low' | 'medium' | 'high'
   }
+  // eslint-disable-next-line no-use-before-define
+  reauthorizationTokenCallback?: (self: PicaComicAPI) => string | Promise<string>
 }
 
 const DEFAULT_OPTION_APP: Options['app'] = {
@@ -55,6 +57,10 @@ function mergeObjectProperty (src: any, value: any, property: string) {
 
 function makeAuthorizationHeaders (token: string) {
   return { authorization: token }
+}
+
+function isPromise<T = any> (obj: any): obj is Promise<T> {
+  return !!obj && (typeof obj === 'object' || typeof obj === 'function') && typeof obj.then === 'function'
 }
 
 type Response<T> = {
@@ -88,7 +94,7 @@ export class PicaComicAPI {
             if (options.context.fetchImage) return // skip image fetch
             const url = options.url.toString()
             const method = options.method
-            debug.enabled && debug('FETCH -> %s %s', method, url)
+            debug('FETCH -> %s %s', method, url)
             const {
               api, apiKey, signatureKey,
               channel, version, uuid, platform, buildVersion,
@@ -116,6 +122,17 @@ export class PicaComicAPI {
               'user-agent': userAgent,
               'image-quality': imageQuality
             }, 'headers')
+          }
+        ],
+        afterResponse: [
+          async (response, retryWithMergedOptions) => {
+            if (response.statusCode !== 401) return response
+            if (typeof this._opts.reauthorizationTokenCallback !== 'function') return response
+            debug('REAUTHORIZATION TOKEN')
+            let token = this._opts.reauthorizationTokenCallback(this)
+            isPromise(token) && (token = await token)
+            const updatedOptions = { headers: makeAuthorizationHeaders(token) }
+            return retryWithMergedOptions(updatedOptions)
           }
         ]
       }
