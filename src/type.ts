@@ -59,6 +59,7 @@ export interface Creator {
 export interface ComicInfo extends Comic {
   _creator: Creator
   chineseTeam: string
+  description: string
   tags: string[]
   updated_at: string
   created_at: string
