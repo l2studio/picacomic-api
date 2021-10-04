@@ -203,18 +203,24 @@ export class PicaComicAPI {
       .then(res => res.data)
   }
 
-  stringifyImageUrl (image: { fileServer: string, path: string }): string {
-    let fileServer = image.fileServer
-    let path = image.path
-    if (path.startsWith('tobeimg/')) {
-      fileServer = 'https://img.picacomic.com/'
-      path = path.substring(path.indexOf('/') + 1)
-    } else {
-      path = 'static/' + path
+  stringifyImageUrl(image: { fileServer: string; path: string }): string {
+    const { path, fileServer } = image
+    const url = new URL(
+      `${fileServer.replace(/\/$/, '')}/static/${path.replace(/^\//, '')}`
+    )
+
+    if (url.pathname.startsWith('/static/tobeimg')) {
+      url.host = 'img.picacomic.com'
+      url.pathname = url.pathname.replace('/static/tobeimg', '')
+      return url.href
     }
-    !fileServer.endsWith('/') && (fileServer = fileServer + '/')
-    path.charAt(0) === '/' && (path = path.substring(1))
-    return fileServer + path
+
+    if (url.pathname.startsWith('/static/static')) {
+      url.host = `storage1.picacomic.com`
+      url.pathname = url.pathname.replace('/static/static', '/static')
+    }
+
+    return url.href
   }
 
   async fetchImage (image: { fileServer: string, path: string }): Promise<Duplex> {
