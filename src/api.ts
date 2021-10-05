@@ -203,7 +203,7 @@ export class PicaComicAPI {
       .then(res => res.data)
   }
 
-  stringifyImageUrl(image: { fileServer: string; path: string }): string {
+  stringifyImageUrl (image: { fileServer: string; path: string }): string {
     const { path, fileServer } = image
     const url = new URL(
       `${fileServer.replace(/\/$/, '')}/static/${path.replace(/^\//, '')}`
@@ -216,7 +216,7 @@ export class PicaComicAPI {
     }
 
     if (url.pathname.startsWith('/static/static')) {
-      url.host = `storage1.picacomic.com`
+      url.host = 'storage1.picacomic.com'
       url.pathname = url.pathname.replace('/static/static', '/static')
     }
 
