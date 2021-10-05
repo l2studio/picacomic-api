@@ -20,7 +20,7 @@ export interface Comic {
   _id: string
   id: string
   title: string
-  author: string
+  author?: string
   totalViews: number
   totalLikes: number
   likesCount: number
@@ -59,7 +59,7 @@ export interface Creator {
 export interface ComicInfo extends Comic {
   _creator: Creator
   chineseTeam: string
-  description: string
+  description?: string
   tags: string[]
   updated_at: string
   created_at: string
