@@ -70,14 +70,14 @@ type Response<T> = {
 }
 
 export class PicaComicAPI {
-  private readonly _fetch: typeof got
-  private readonly _opts: Options
+  public readonly fetch: typeof got
+  public readonly options: Readonly<Options>
 
   constructor (opts?: Partial<Options>) {
     opts = opts || {}
-    this._opts = mergeOptions(opts)
-    this._fetch = got.extend({
-      prefixUrl: this._opts.app.api,
+    this.options = mergeOptions(opts)
+    this.fetch = got.extend({
+      prefixUrl: this.options.app.api,
       maxRedirects: 0,
       followRedirect: false,
       timeout: opts.timeout,
@@ -99,7 +99,7 @@ export class PicaComicAPI {
               api, apiKey, signatureKey,
               channel, version, uuid, platform, buildVersion,
               accept, userAgent, imageQuality
-            } = this._opts.app
+            } = this.options.app
             const nonce = uuidv4().replace(/-/g, '')
             const time = (Date.now() / 1000).toFixed(0)
             const con = (
@@ -127,9 +127,9 @@ export class PicaComicAPI {
         afterResponse: [
           async (response, retryWithMergedOptions) => {
             if (response.statusCode !== 401) return response
-            if (typeof this._opts.reauthorizationTokenCallback !== 'function') return response
+            if (typeof this.options.reauthorizationTokenCallback !== 'function') return response
             debug('REAUTHORIZATION TOKEN')
-            let token = this._opts.reauthorizationTokenCallback(this)
+            let token = this.options.reauthorizationTokenCallback(this)
             isPromise(token) && (token = await token)
             const updatedOptions = { headers: makeAuthorizationHeaders(token) }
             return retryWithMergedOptions(updatedOptions)
@@ -140,7 +140,7 @@ export class PicaComicAPI {
   }
 
   async signIn (payload: { email: string, password: string }): Promise<string> {
-    return this._fetch
+    return this.fetch
       .post('auth/sign-in', {
         json: {
           email: payload.email,
@@ -152,14 +152,14 @@ export class PicaComicAPI {
   }
 
   async fetchCategories (payload: { token: string }): Promise<types.Category[]> {
-    return this._fetch
+    return this.fetch
       .get('categories', { headers: makeAuthorizationHeaders(payload.token) })
       .json<Response<{ categories: types.Category[] }>>()
       .then(res => res.data.categories)
   }
 
   async fetchComics (payload: { token: string, category: string, page?: number, sort?: 'ua' | 'dd' | 'da' | 'ld' | 'vd' }): Promise<types.Comics> {
-    return this._fetch
+    return this.fetch
       .get('comics', {
         headers: makeAuthorizationHeaders(payload.token),
         searchParams: {
@@ -173,14 +173,14 @@ export class PicaComicAPI {
   }
 
   async fetchComic (payload: { token: string, id: string }): Promise<types.ComicInfo> {
-    return this._fetch
+    return this.fetch
       .get(`comics/${payload.id}`, { headers: makeAuthorizationHeaders(payload.token) })
       .json<Response<{ comic: types.ComicInfo }>>()
       .then(res => res.data.comic)
   }
 
   async fetchComicEpisodes (payload: { token: string, comicId: string, page?: number }): Promise<types.ComicEpisodes> {
-    return this._fetch
+    return this.fetch
       .get(`comics/${payload.comicId}/eps`, {
         headers: makeAuthorizationHeaders(payload.token),
         searchParams: {
@@ -192,7 +192,7 @@ export class PicaComicAPI {
   }
 
   async fetchComicEpisodePages (payload: { token: string, comicId: string, epsOrder: number, page?: number }): Promise<types.ComicEpisodePages> {
-    return this._fetch
+    return this.fetch
       .get(`comics/${payload.comicId}/order/${payload.epsOrder}/pages`, {
         headers: makeAuthorizationHeaders(payload.token),
         searchParams: {
@@ -219,6 +219,6 @@ export class PicaComicAPI {
 
   async fetchImage (image: { fileServer: string, path: string }): Promise<Duplex> {
     const url = this.stringifyImageUrl(image)
-    return this._fetch.stream({ prefixUrl: '', url, context: { fetchImage: true } })
+    return this.fetch.stream({ prefixUrl: '', url, context: { fetchImage: true } })
   }
 }
