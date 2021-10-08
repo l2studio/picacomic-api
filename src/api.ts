@@ -203,7 +203,7 @@ export class PicaComicAPI {
       .then(res => res.data)
   }
 
-  stringifyImageUrl (image: { fileServer: string; path: string }): string {
+  stringifyImageUrl (image: { fileServer: string, path: string }): string {
     const { path, fileServer } = image
     const url = new URL(
       `${fileServer.replace(/\/$/, '')}/static/${path.replace(/^\//, '')}`

@@ -162,7 +162,7 @@ PicaComicAPI.prototype.fetchComicEpisodePages(payload: { token: string, comicId:
  * }
  * @return Stringify image url
  */
-PicaComicAPI.prototype.stringifyImageUrl(payload: { fileServer: string; path: string }): string
+PicaComicAPI.prototype.stringifyImageUrl(payload: { fileServer: string, path: string }): string
 ```
 
 ### .fetchImage
@@ -177,7 +177,7 @@ PicaComicAPI.prototype.stringifyImageUrl(payload: { fileServer: string; path: st
  * }
  * @return Duplex (Got stream)
  */
-PicaComicAPI.prototype.fetchImage(payload: { fileServer: string; path: string }): Promise<Duplex>
+PicaComicAPI.prototype.fetchImage(payload: { fileServer: string, path: string }): Promise<Duplex>
 ```
 
 ## License
