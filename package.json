@@ -1,6 +1,6 @@
 {
   "name": "@l2studio/picacomic-api",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "A library for PicaComic http web api",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -19,6 +19,18 @@
   },
   "files": [
     "lib"
+  ],
+  "keywords": [
+    "l2studio",
+    "lgou2w",
+    "picacomic-api",
+    "picacomic-client",
+    "picacomic",
+    "hentai",
+    "hentai-cosplay",
+    "r18",
+    "r18-cosplay",
+    "cosplay"
   ],
   "dependencies": {
     "debug": "^4.3.2",
