@@ -6,6 +6,28 @@ export interface Image {
   fileServer: string
 }
 
+export interface PunchInResponse {
+  status: 'ok' | 'fail'
+  punchInLastDay?: string
+}
+
+export interface User {
+  _id: string
+  birthday: string
+  email: string
+  gender: string
+  name: string
+  slogan?: string
+  title: string
+  verified: boolean
+  exp: number
+  level: number
+  characters: string[]
+  created_at: string
+  avatar?: Image
+  isPunched: boolean
+}
+
 export interface Category {
   _id: string
   title: string
@@ -68,6 +90,28 @@ export interface ComicInfo extends Comic {
   isFavourite: boolean
   isLiked: boolean
   commentsCount: number
+}
+
+export interface ComicComment {
+  _id: string
+  id: string
+  content: string
+  _user: Omit<User, 'birthday' | 'email' | 'isPunched' | 'created_at'> & {
+    role: string
+    character?: string
+  }
+  _comic: string
+  isTop: boolean
+  hide: boolean
+  created_at: string
+  likesCount: number
+  commentsCount: number
+  isLiked: boolean
+}
+
+export interface ComicComments {
+  comments: Paginate<ComicComment[]>
+  topComments: ComicComment[]
 }
 
 export interface ComicEpisode {

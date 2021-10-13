@@ -3,7 +3,7 @@ import type { Duplex } from 'stream'
 import { httpOverHttp, httpsOverHttp } from 'tunnel'
 import { v4 as uuidv4 } from 'uuid'
 import { createHmac } from 'crypto'
-import got from 'got'
+import got, { HTTPError } from 'got'
 
 const debug = require('debug')('lgou2w:picacomic-api')
 
@@ -64,9 +64,34 @@ function isPromise<T = any> (obj: any): obj is Promise<T> {
 }
 
 type Response<T> = {
-  code: string
+  code: number
   message: string
   data: T
+}
+
+export class PicaComicError extends Error {
+  constructor (
+    readonly cause: HTTPError | Error,
+    readonly code: number,
+    readonly error: string,
+    readonly message: string,
+    readonly detail?: string
+  ) {
+    super(message)
+    this.name = 'PicaComicError'
+  }
+}
+
+function catchError (err: HTTPError | Error): Promise<never> {
+  let wrap: PicaComicError
+  if (err instanceof HTTPError && err.response.body) {
+    const { code, error, message, detail } = JSON.parse(err.response.body as string)
+    wrap = new PicaComicError(err, code, error, message, detail)
+  } else {
+    wrap = new PicaComicError(err, -1, 'Error', err.message)
+  }
+  Error.captureStackTrace(wrap, catchError)
+  return Promise.reject(wrap)
 }
 
 export class PicaComicAPI {
@@ -139,6 +164,28 @@ export class PicaComicAPI {
     })
   }
 
+  async register (payload: {
+    name: string
+    email: string
+    password: string
+    question1: string
+    question2: string
+    question3: string
+    answer1: string
+    answer2: string
+    answer3: string
+    birthday: string | Date | number
+    gender: 'm' | 'f' | 'bot'
+  }): Promise<Response<void>> {
+    if (payload.birthday instanceof Date) {
+      payload.birthday = payload.birthday.valueOf()
+    }
+    return this.fetch
+      .post('auth/register', { json: payload })
+      .json<Response<void>>()
+      .catch(catchError)
+  }
+
   async signIn (payload: { email: string, password: string }): Promise<string> {
     return this.fetch
       .post('auth/sign-in', {
@@ -149,6 +196,37 @@ export class PicaComicAPI {
       })
       .json<Response<{ token: string }>>()
       .then(res => res.data.token)
+      .catch(catchError)
+  }
+
+  async punchIn (payload: { token: string }): Promise<types.PunchInResponse> {
+    return this.fetch
+      .post('users/punch-in', { headers: makeAuthorizationHeaders(payload.token) })
+      .json<Response<{ res: types.PunchInResponse }>>()
+      .then(res => res.data.res)
+      .catch(catchError)
+  }
+
+  async fetchUserProfile (payload: { token: string }): Promise<types.User> {
+    return this.fetch
+      .get('users/profile', { headers: makeAuthorizationHeaders(payload.token) })
+      .json<Response<{ user: types.User }>>()
+      .then(res => res.data.user)
+      .catch(catchError)
+  }
+
+  async fetchUserFavourite (payload: { token: string, page?: number, sort?: 'ua' | 'dd' | 'da' | 'ld' | 'vd' }): Promise<types.Comics> {
+    return this.fetch
+      .get('users/favourite', {
+        headers: makeAuthorizationHeaders(payload.token),
+        searchParams: {
+          page: payload.page || 1,
+          s: payload.sort || 'ua'
+        }
+      })
+      .json<Response<{ comics: types.Comics }>>()
+      .then(res => res.data.comics)
+      .catch(catchError)
   }
 
   async fetchCategories (payload: { token: string }): Promise<types.Category[]> {
@@ -156,6 +234,7 @@ export class PicaComicAPI {
       .get('categories', { headers: makeAuthorizationHeaders(payload.token) })
       .json<Response<{ categories: types.Category[] }>>()
       .then(res => res.data.categories)
+      .catch(catchError)
   }
 
   async fetchComics (payload: { token: string, category: string, page?: number, sort?: 'ua' | 'dd' | 'da' | 'ld' | 'vd' }): Promise<types.Comics> {
@@ -170,6 +249,7 @@ export class PicaComicAPI {
       })
       .json<Response<{ comics: types.Comics }>>()
       .then(res => res.data.comics)
+      .catch(catchError)
   }
 
   async fetchComic (payload: { token: string, id: string }): Promise<types.ComicInfo> {
@@ -177,6 +257,20 @@ export class PicaComicAPI {
       .get(`comics/${payload.id}`, { headers: makeAuthorizationHeaders(payload.token) })
       .json<Response<{ comic: types.ComicInfo }>>()
       .then(res => res.data.comic)
+      .catch(catchError)
+  }
+
+  async fetchComicComments (payload: { token: string, comicId: string, page?: number }): Promise<types.ComicComments> {
+    return this.fetch
+      .get(`comics/${payload.comicId}/comments`, {
+        headers: makeAuthorizationHeaders(payload.token),
+        searchParams: {
+          page: payload.page || 1
+        }
+      })
+      .json<Response<{ comments: types.Paginate<types.ComicComment[]>, topComments: types.ComicComment[] }>>()
+      .then(res => res.data)
+      .catch(catchError)
   }
 
   async fetchComicEpisodes (payload: { token: string, comicId: string, page?: number }): Promise<types.ComicEpisodes> {
@@ -189,6 +283,7 @@ export class PicaComicAPI {
       })
       .json<Response<{ eps: types.ComicEpisodes }>>()
       .then(res => res.data.eps)
+      .catch(catchError)
   }
 
   async fetchComicEpisodePages (payload: { token: string, comicId: string, epsOrder: number, page?: number }): Promise<types.ComicEpisodePages> {
@@ -201,6 +296,7 @@ export class PicaComicAPI {
       })
       .json<Response<types.ComicEpisodePages>>()
       .then(res => res.data)
+      .catch(catchError)
   }
 
   stringifyImageUrl (image: { fileServer: string, path: string }): string {
@@ -226,5 +322,55 @@ export class PicaComicAPI {
   async fetchImage (image: { fileServer: string, path: string }): Promise<Duplex> {
     const url = this.stringifyImageUrl(image)
     return this.fetch.stream({ prefixUrl: '', url, context: { fetchImage: true } })
+  }
+
+  async search (payload: {
+    token: string
+    keyword: string
+    categories?: string[]
+    page?: number
+    sort?: 'ua' | 'dd' | 'da' | 'ld' | 'vd'
+  }): Promise<types.Comics> {
+    return this.fetch
+      .post('comics/advanced-search', {
+        headers: makeAuthorizationHeaders(payload.token),
+        json: {
+          keyword: payload.keyword,
+          categories: payload.categories,
+          page: payload.page || 1,
+          s: payload.sort || 'ua'
+        }
+      })
+      .json<Response<{ comics: types.Comics }>>()
+      .then(res => res.data.comics)
+      .catch(catchError)
+  }
+
+  async switchComicLike (payload: { token: string, id: string }): Promise<'like' | 'unlike'> {
+    return this.fetch
+      .post(`comics/${payload.id}/like`, { headers: makeAuthorizationHeaders(payload.token) })
+      .json<Response<{ action: 'like' | 'unlike' }>>()
+      .then(res => res.data.action)
+      .catch(catchError)
+  }
+
+  async switchComicFavourite (payload: { token: string, id: string }): Promise<'favourite' | 'un_favourite'> {
+    return this.fetch
+      .post(`comics/${payload.id}/favourite`, { headers: makeAuthorizationHeaders(payload.token) })
+      .json<Response<{ action: 'favourite' | 'un_favourite' }>>()
+      .then(res => res.data.action)
+      .catch(catchError)
+  }
+
+  async setUserProfileSlogan (payload: { token: string, slogan: string }): Promise<Response<void>> {
+    return this.fetch
+      .put('users/profile', {
+        headers: makeAuthorizationHeaders(payload.token),
+        json: {
+          slogan: payload.slogan
+        }
+      })
+      .json<Response<void>>()
+      .catch(catchError)
   }
 }
