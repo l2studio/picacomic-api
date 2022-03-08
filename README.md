@@ -56,7 +56,7 @@ type Options = {
   //       password: 'your picacomic account password'
   //     })
   //   }
-  reauthorizationTokenCallback?: (self: PicaComicAPI) => string | Promise<string>
+  reauthorizationTokenCallback?: (self: PicaComicAPI) => string | undefined | Promise<string | undefined>
 }
 ```
 
@@ -261,12 +261,12 @@ PicaComicAPI.prototype.fetchComicEpisodePages(payload: { token: string, comicId:
  * Stringify the given media image data into image url.
  *
  * @param payload - {
- *   fileServer - File server
  *   path       - Path name
+ *   fileServer - File server (Optional)
  * }
  * @return Stringify image url
  */
-PicaComicAPI.prototype.stringifyImageUrl(payload: { fileServer: string, path: string }): string
+PicaComicAPI.prototype.stringifyImageUrl(payload: { path: string, fileServer?: string }): string
 ```
 
 ### .fetchImage
@@ -276,12 +276,12 @@ PicaComicAPI.prototype.stringifyImageUrl(payload: { fileServer: string, path: st
  * Fetch image from the given media image data.
  *
  * @param payload - {
- *   fileServer - File server
  *   path       - Path name
+ *   fileServer - File server (Optional)
  * }
  * @return Duplex (Got stream)
  */
-PicaComicAPI.prototype.fetchImage(payload: { fileServer: string, path: string }): Promise<Duplex>
+PicaComicAPI.prototype.fetchImage(payload: { path: string, fileServer?: string }): Promise<Duplex>
 ```
 
 ### .search
