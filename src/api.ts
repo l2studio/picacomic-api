@@ -27,7 +27,7 @@ export type Options = {
     imageQuality: 'original' | 'low' | 'medium' | 'high'
   }
   // eslint-disable-next-line no-use-before-define
-  reauthorizationTokenCallback?: (self: PicaComicAPI) => string | Promise<string>
+  reauthorizationTokenCallback?: (self: PicaComicAPI) => string | undefined | Promise<string | undefined>
 }
 
 const DEFAULT_OPTION_APP: Options['app'] = {
@@ -156,6 +156,7 @@ export class PicaComicAPI {
             debug('REAUTHORIZATION TOKEN')
             let token = this.options.reauthorizationTokenCallback(this)
             isPromise(token) && (token = await token)
+            if (!token) return response
             const updatedOptions = { headers: makeAuthorizationHeaders(token) }
             return retryWithMergedOptions(updatedOptions)
           }
