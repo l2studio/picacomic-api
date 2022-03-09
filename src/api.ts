@@ -336,7 +336,7 @@ export class PicaComicAPI {
           keyword: payload.keyword,
           categories: payload.categories,
           s: payload.sort || 'ua'
-        },
+        }
       })
       .json<Response<{ comics: types.Comics }>>()
       .then(res => res.data.comics)
