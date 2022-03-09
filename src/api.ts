@@ -331,12 +331,12 @@ export class PicaComicAPI {
     return this.fetch
       .post('comics/advanced-search', {
         headers: makeAuthorizationHeaders(payload.token),
+        searchParams: { page: payload.page || 1 },
         json: {
           keyword: payload.keyword,
           categories: payload.categories,
-          page: payload.page || 1,
           s: payload.sort || 'ua'
-        }
+        },
       })
       .json<Response<{ comics: types.Comics }>>()
       .then(res => res.data.comics)
