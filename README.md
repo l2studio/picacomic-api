@@ -129,7 +129,7 @@ PicaComicAPI.prototype.signIn(payload: { email: string, password: string }): Pro
  * @param payload - Access token payload
  * @return PunchInResponse
  */
-PicaComicAPI.prototype.punchIn(payload: { email: string, password: string }): Promise<PunchInResponse>
+PicaComicAPI.prototype.punchIn(payload: { token: string }): Promise<PunchInResponse>
 ```
 
 ### .fetchUserProfile
