@@ -22,7 +22,10 @@ By default, the constructor does not need parameters.
 ```typescript
 import { PicaComicAPI } from '@l2studio/picacomic-api'
 
-class PicaComicAPI(opts?: Partial<Options>)
+class PicaComicAPI(opts?: Partial<Options>) {
+  public readonly fetch: typeof got
+  public readonly options: Readonly<Options>
+}
 ```
 
 ### Options
@@ -72,7 +75,8 @@ class PicaComicError extends Error {
 }
 ```
 
-### .register
+<details>
+<summary>.register</summary>
 
 ```typescript
 /**
@@ -108,7 +112,10 @@ PicaComicAPI.prototype.register(payload: {
 }): Promise<Response<void>>
 ```
 
-### .signIn
+</details>
+
+<details>
+<summary>.signIn</summary>
 
 ```typescript
 /**
@@ -120,7 +127,10 @@ PicaComicAPI.prototype.register(payload: {
 PicaComicAPI.prototype.signIn(payload: { email: string, password: string }): Promise<string>
 ```
 
-### .punchIn
+</details>
+
+<details>
+<summary>.punchIn</summary>
 
 ```typescript
 /**
@@ -132,7 +142,10 @@ PicaComicAPI.prototype.signIn(payload: { email: string, password: string }): Pro
 PicaComicAPI.prototype.punchIn(payload: { token: string }): Promise<PunchInResponse>
 ```
 
-### .fetchUserProfile
+</details>
+
+<details>
+<summary>.fetchUserProfile</summary>
 
 ```typescript
 /**
@@ -144,7 +157,10 @@ PicaComicAPI.prototype.punchIn(payload: { token: string }): Promise<PunchInRespo
 PicaComicAPI.prototype.fetchUserProfile(payload: { token: string }): Promise<User>
 ```
 
-### .fetchUserFavourite
+</details>
+
+<details>
+<summary>.fetchUserFavourite</summary>
 
 ```typescript
 /**
@@ -160,7 +176,10 @@ PicaComicAPI.prototype.fetchUserProfile(payload: { token: string }): Promise<Use
 PicaComicAPI.prototype.fetchUserFavourite(payload: { token: string, page?: number, sort?: 'ua' | 'dd' | 'da' | 'ld' | 'vd' }): Promise<Comics>
 ```
 
-### .fetchCategories
+</details>
+
+<details>
+<summary>.fetchCategories</summary>
 
 ```typescript
 /**
@@ -172,7 +191,10 @@ PicaComicAPI.prototype.fetchUserFavourite(payload: { token: string, page?: numbe
 PicaComicAPI.prototype.fetchCategories(payload: { token: string }): Promise<Category[]>
 ```
 
-### .fetchComics
+</details>
+
+<details>
+<summary>.fetchComics</summary>
 
 ```typescript
 /**
@@ -189,7 +211,10 @@ PicaComicAPI.prototype.fetchCategories(payload: { token: string }): Promise<Cate
 PicaComicAPI.prototype.fetchComics(payload: { token: string, category: string, page?: number, sort?: 'ua' | 'dd' | 'da' | 'ld' | 'vd' }): Promise<Comics>
 ```
 
-### .fetchComic
+</details>
+
+<details>
+<summary>.fetchComic</summary>
 
 ```typescript
 /**
@@ -204,7 +229,10 @@ PicaComicAPI.prototype.fetchComics(payload: { token: string, category: string, p
 PicaComicAPI.prototype.fetchComic(payload: { token: string, id: string }): Promise<ComicInfo>
 ```
 
-### .fetchComicComments
+</details>
+
+<details>
+<summary>.fetchComicComments</summary>
 
 ```typescript
 /**
@@ -220,7 +248,10 @@ PicaComicAPI.prototype.fetchComic(payload: { token: string, id: string }): Promi
 PicaComicAPI.prototype.fetchComicComments(payload: { token: string, comicId: string, page?: number }): Promise<ComicComments>
 ```
 
-### .fetchComicEpisodes
+</details>
+
+<details>
+<summary>.fetchComicEpisodes</summary>
 
 ```typescript
 /**
@@ -236,7 +267,10 @@ PicaComicAPI.prototype.fetchComicComments(payload: { token: string, comicId: str
 PicaComicAPI.prototype.fetchComicEpisodes(payload: { token: string, comicId: string, page?: number }): Promise<ComicEpisodes>
 ```
 
-### .fetchComicEpisodePages
+</details>
+
+<details>
+<summary>.fetchComicEpisodePages</summary>
 
 ```typescript
 /**
@@ -253,8 +287,10 @@ PicaComicAPI.prototype.fetchComicEpisodes(payload: { token: string, comicId: str
 PicaComicAPI.prototype.fetchComicEpisodePages(payload: { token: string, comicId: string, epsOrder: number, page?: number }): Promise<ComicEpisodePages>
 ```
 
-### .stringifyImageUrl
+</details>
 
+<details>
+<summary>.stringifyImageUrl</summary>
 
 ```typescript
 /**
@@ -269,7 +305,10 @@ PicaComicAPI.prototype.fetchComicEpisodePages(payload: { token: string, comicId:
 PicaComicAPI.prototype.stringifyImageUrl(payload: { path: string, fileServer?: string }): string
 ```
 
-### .fetchImage
+</details>
+
+<details>
+<summary>.fetchImage</summary>
 
 ```typescript
 /**
@@ -284,7 +323,10 @@ PicaComicAPI.prototype.stringifyImageUrl(payload: { path: string, fileServer?: s
 PicaComicAPI.prototype.fetchImage(payload: { path: string, fileServer?: string }): Promise<Duplex>
 ```
 
-### .search
+</details>
+
+<details>
+<summary>.search</summary>
 
 ```typescript
 /**
@@ -302,7 +344,10 @@ PicaComicAPI.prototype.fetchImage(payload: { path: string, fileServer?: string }
 PicaComicAPI.prototype.search(payload: { token: string, keyword: string, categories?: string[], page?: number, sort?: 'ua' | 'dd' | 'da' | 'ld' | 'vd' }): Promise<Comics>
 ```
 
-### .switchComicLike
+</details>
+
+<details>
+<summary>.switchComicLike</summary>
 
 ```typescript
 /**
@@ -317,7 +362,10 @@ PicaComicAPI.prototype.search(payload: { token: string, keyword: string, categor
 PicaComicAPI.prototype.switchComicLike(payload: { token: string, id: string }): Promise<'like' | 'unlike'>
 ```
 
-### .switchComicFavourite
+</details>
+
+<details>
+<summary>.switchComicFavourite</summary>
 
 ```typescript
 /**
@@ -332,7 +380,10 @@ PicaComicAPI.prototype.switchComicLike(payload: { token: string, id: string }): 
 PicaComicAPI.prototype.switchComicFavourite(payload: { token: string, id: string }): Promise<'favourite' | 'un_favourite'>
 ```
 
-### .setUserProfileSlogan
+</details>
+
+<details>
+<summary>.setUserProfileSlogan</summary>
 
 ```typescript
 /**
@@ -345,6 +396,69 @@ PicaComicAPI.prototype.switchComicFavourite(payload: { token: string, id: string
  * @return Response
  */
 PicaComicAPI.prototype.setUserProfileSlogan(payload: { token: string, slogan: string }): Promise<Response<void>>
+```
+
+</details>
+
+## Service
+
+The service is just a wrapper for a single account operation, and does not need to handle the problem of token invalidation by itself.
+
+> Note: Service does not provide `register` and `signIn` functions.
+
+```typescript
+import { PicaComicService } from '@l2studio/picacomic-api'
+
+class PicaComicService(opts: ServiceOptions) {
+  public readonly api: PicaComicAPI
+  public readonly email: string
+  public readonly password: string
+  public readonly onReauthorizationToken?: (token: string) => void | Promise<void>
+  public token: string
+}
+```
+
+### Options
+
+```typescript
+type ServiceOptions = Partial<Omit<Options, 'reauthorizationTokenCallback'>> & {
+  email: string         // PicaComic account email
+  password: string      // PicaComic account password
+  token?: string        // PicaComic account access token (Optional)
+  // Callback function for re-authenticate and consuming a new token when the token is invalid. (Optional)
+  // Example:
+  //   onReauthorizationToken (token) {
+  //     console.log('New token:', token)
+  //     fs.writeFileSync('token.txt', token)
+  //   }
+  onReauthorizationToken?: (token: string) => void | Promise<void>
+}
+```
+
+### Example
+
+When the token expires, it will re-login and renew the token and persistence. No need to provide token every time.
+
+```typescript
+import { PicaComicService } from '@l2studio/picacomic-api'
+import path from 'path'
+import fs from 'fs'
+
+const tokenFile = path.join(__dirname, '.token') // Persistent token
+const picacomic = new PicaComicService({
+  email   : 'your picacomic email',
+  password: 'your picacomic password',
+  token: fs.readFileSync(tokenFile, 'utf8'),
+  onReauthorizationToken (token) {
+    console.log('New token:', token)
+    fs.writeFileSync(tokenFile, token) // Update persistent token
+  }
+})
+
+;(async () => {
+  const res = await picacomic.fetchComics({ category: 'Cosplay' })
+  console.log(res)
+})()
 ```
 
 ## License
