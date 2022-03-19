@@ -1,5 +1,5 @@
-- **English**
-- [简体中文](README-CN.md)
+- [English](README.md)
+- **简体中文**
 
 # L2 Studio - PicaComic API
 
@@ -8,19 +8,19 @@
 <a href="https://www.npmjs.com/package/@l2studio/picacomic-api"><img src="https://img.shields.io/npm/v/@l2studio/picacomic-api?logo=npm&style=flat-square"/></a>
 </p>
 
-A library for PicaComic http web api
+一个用于 PicaComic 哔咔的 HTTP 网站 API
 
-## Install
+## 安装
 
 ```shell
 npm install --save @l2studio/picacomic-api
-# or
+# 或者
 pnpm i @l2studio/picacomic-api
 ```
 
 ## API
 
-By default, the constructor does not need parameters.
+构造方法默认不需要参数。
 
 ```typescript
 import { PicaComicAPI } from '@l2studio/picacomic-api'
@@ -31,16 +31,16 @@ class PicaComicAPI(opts?: Partial<Options>) {
 }
 ```
 
-### Options
+### 选项
 
 ```typescript
 type Options = {
-  timeout?: number // http request timeout (optional)
-  proxy?: {        // http proxy (optional)
-    host: string   //      proxy host (required)
-    port: number   //      porxy port (required)
+  timeout?: number // HTTP 请求超时（可选）
+  proxy?: {        // HTTP 代理（可选）
+    host: string   //      代理主机（可选）
+    port: number   //      代理端口（可选）
   }
-  app?: {          // PicaComic app client options (optional)
+  app?: {          // PicaComic app 客户端选项（可选）
     api: string
     apiKey: string
     signatureKey: string
@@ -53,13 +53,13 @@ type Options = {
     userAgent: string
     imageQuality: 'original' | 'low' | 'medium' | 'high'
   }
-  // Callback function used to re-authenticate and return a new token when the token is invalid. (optional)
-  // Example:
+  // 用于在令牌无效时重新认证并返回新令牌的回调函数。（可选的）
+  // 例子:
   //   async reauthorizationTokenCallback (self) {
-  //     console.log('Token invalid, re-authenticate...')
+  //     console.log('令牌无效, 重新认证...')
   //     return await self.signIn({
-  //       email   : 'your picacomic account email',
-  //       password: 'your picacomic account password'
+  //       email   : '你的 PicaComic 哔咔账户邮箱',
+  //       password: '你的 PicaComic 哔咔账户密码'
   //     })
   //   }
   reauthorizationTokenCallback?: (self: PicaComicAPI) => string | undefined | Promise<string | undefined>
@@ -83,20 +83,20 @@ class PicaComicError extends Error {
 
 ```typescript
 /**
- * Register a PicaComic account with the given payload.
+ * 使用给定的有效负载注册一个 PicaComic 哔咔帐户。
  *
  * @param payload - {
- *   name      - Nickname (2 - 50 characters)
- *   email     - Email (Allow: [0-9 a-z . _])
- *   password  - Password (Greater than 8 characters)
- *   question1 - Security Question 1
- *   question2 -                   2
- *   question3 -                   3
- *   answer1   - Security question 1 answer
- *   answer2   -                   2 answer
- *   answer3   -                   3 answer
- *   birthday  - Birthday ('YYYY-MM-DD' | Date | Milliseconds) Need to be 18 years or older
- *   gender    - Gender ('m' | 'f' | 'bot')
+ *   name      - 昵称（2 - 50 字符）
+ *   email     - 邮箱（允许: [0-9 a-z . _]）
+ *   password  - 密码（大于 8 个字符）
+ *   question1 - 安全问题 1
+ *   question2 -         2
+ *   question3 -         3
+ *   answer1   - 安全问题 1 答案
+ *   answer2   -         2 答案
+ *   answer3   -         3 答案
+ *   birthday  - 生日（'YYYY-MM-DD' | Date | Milliseconds）需要年满 18 岁
+ *   gender    - 性别（'m' | 'f' | 'bot'）
  * }
  * @return Response
  */
@@ -122,10 +122,10 @@ PicaComicAPI.prototype.register(payload: {
 
 ```typescript
 /**
- * Sign in to the PicaComic account with the given email and password payload.
+ * 使用给定的电子邮件和密码有效负载登录到 PicaComic 哔咔帐户。
  *
- * @param payload - Email and password payload
- * @return Access token
+ * @param payload - 电子邮件和密码
+ * @return 访问令牌
  */
 PicaComicAPI.prototype.signIn(payload: { email: string, password: string }): Promise<string>
 ```
@@ -137,9 +137,9 @@ PicaComicAPI.prototype.signIn(payload: { email: string, password: string }): Pro
 
 ```typescript
 /**
- * Punch in to the PicaComic account with the given access token payload.
+ * 使用给定的访问令牌有效负载打卡 PicaComic 哔咔帐户。
  *
- * @param payload - Access token payload
+ * @param payload - 访问令牌
  * @return PunchInResponse
  */
 PicaComicAPI.prototype.punchIn(payload: { token: string }): Promise<PunchInResponse>
@@ -152,9 +152,9 @@ PicaComicAPI.prototype.punchIn(payload: { token: string }): Promise<PunchInRespo
 
 ```typescript
 /**
- * Fetch user profile using the given access token payload.
+ * 使用给定的访问令牌有效负载获取用户档案。
  *
- * @param payload - Access token payload
+ * @param payload - 访问令牌
  * @return User
  */
 PicaComicAPI.prototype.fetchUserProfile(payload: { token: string }): Promise<User>
@@ -167,12 +167,12 @@ PicaComicAPI.prototype.fetchUserProfile(payload: { token: string }): Promise<Use
 
 ```typescript
 /**
- * Fetch user favourite comics using the given payload.
+ * 使用给定的有效负载获取用户收藏的漫画。
  *
  * @param payload - {
- *   token    - Access token
- *   page     - Page number (optional)
- *   sort     - Sorting type (optional)
+ *   token    - 访问令牌
+ *   page     - 页数（可选）
+ *   sort     - 排序（可选）
  * }
  * @return Comics
  */
@@ -186,9 +186,9 @@ PicaComicAPI.prototype.fetchUserFavourite(payload: { token: string, page?: numbe
 
 ```typescript
 /**
- * Fetch all categories using the given access token payload.
+ * 使用给定的访问令牌有效负载获取所有分类。
  *
- * @param payload - Access token payload
+ * @param payload - 访问令牌
  * @return Category[]
  */
 PicaComicAPI.prototype.fetchCategories(payload: { token: string }): Promise<Category[]>
@@ -201,13 +201,13 @@ PicaComicAPI.prototype.fetchCategories(payload: { token: string }): Promise<Cate
 
 ```typescript
 /**
- * Fetch comics using the given payload.
+ * 使用给定的有效负载获取漫画。
  *
  * @param payload - {
- *   token    - Access token
- *   category - Specify category name (e.g.: 'Cosplay')
- *   page     - Page number (optional)
- *   sort     - Sorting type (optional)
+ *   token    - 访问令牌
+ *   category - 分类名称（例如：'Cosplay'）
+ *   page     - 页数（可选）
+ *   sort     - 排序（可选）
  * }
  * @return Comics
  */
@@ -221,11 +221,11 @@ PicaComicAPI.prototype.fetchComics(payload: { token: string, category: string, p
 
 ```typescript
 /**
- * Fetch comic info using the given payload.
+ * 使用给定的有效负载获取漫画信息。
  *
  * @param payload - {
- *   token - Access token
- *   id    - Specify comic id
+ *   token - 访问令牌
+ *   id    - 漫画 ID
  * }
  * @return ComicInfo
  */
@@ -239,12 +239,12 @@ PicaComicAPI.prototype.fetchComic(payload: { token: string, id: string }): Promi
 
 ```typescript
 /**
- * Fetch comic comments using the given payload.
+ * 使用给定的有效负载获取漫画评论。
  *
  * @param payload - {
- *   token   - Access token
- *   comicId - Specify comic id
- *   page    - Page number (optional)
+ *   token   - 访问令牌
+ *   comicId - 漫画 ID
+ *   page    - 页数（可选）
  * }
  * @return ComicComments
  */
@@ -258,12 +258,12 @@ PicaComicAPI.prototype.fetchComicComments(payload: { token: string, comicId: str
 
 ```typescript
 /**
- * Fetch comic episodes using the given payload.
+ * 使用给定的有效负载获取漫画分话。
  *
  * @param payload - {
- *   token   - Access token
- *   comicId - Specify comic id
- *   page    - Page number (optional)
+ *   token   - 访问令牌
+ *   comicId - 漫画 ID
+ *   page    - 页数（可选）
  * }
  * @return ComicEpisodes
  */
@@ -277,13 +277,13 @@ PicaComicAPI.prototype.fetchComicEpisodes(payload: { token: string, comicId: str
 
 ```typescript
 /**
- * Fetch pages of the specified comic episode using the given payload.
+ * 使用给定的有效负载获取指定漫画分话的页面。
  *
  * @param payload - {
- *   token    - Access token
- *   comicId  - Specify comic id
- *   epsOrder - Specify episode order of the comic
- *   page     - Page number (optional)
+ *   token    - 访问令牌
+ *   comicId  - 漫画 ID
+ *   epsOrder - 漫画分话顺序
+ *   page     - 页数（可选）
  * }
  * @return ComicEpisodePages
  */
@@ -297,13 +297,13 @@ PicaComicAPI.prototype.fetchComicEpisodePages(payload: { token: string, comicId:
 
 ```typescript
 /**
- * Stringify the given media image data into image url.
+ * 将给定的媒体图像数据字符串化为图像 URL 链接。
  *
  * @param payload - {
- *   path       - Path name
- *   fileServer - File server (Optional)
+ *   path       - 路径名称
+ *   fileServer - 文件服务器（可选）
  * }
- * @return Stringify image url
+ * @return 字符串化图片地址
  */
 PicaComicAPI.prototype.stringifyImageUrl(payload: { path: string, fileServer?: string }): string
 ```
@@ -315,11 +315,11 @@ PicaComicAPI.prototype.stringifyImageUrl(payload: { path: string, fileServer?: s
 
 ```typescript
 /**
- * Fetch image from the given media image data.
+ * 从给定的媒体图像数据中获取图像数据流。
  *
  * @param payload - {
- *   path       - Path name
- *   fileServer - File server (Optional)
+ *   path       - 路径名称
+ *   fileServer - 文件服务器（可选）
  * }
  * @return Duplex (Got stream)
  */
@@ -333,14 +333,14 @@ PicaComicAPI.prototype.fetchImage(payload: { path: string, fileServer?: string }
 
 ```typescript
 /**
- * Search comics using the given payload.
+ * 使用给定的有效负载搜索漫画。
  *
  * @param payload - {
- *   token      - Access token
- *   keyword    - Keyword
- *   categories - Specify category name array (e.g.: ['Cosplay']) (optional)
- *   page       - Page number (optional)
- *   sort       - Sorting type (optional)
+ *   token      - 访问令牌
+ *   keyword    - 关键字
+ *   categories - 分类名称数组（例如：['Cosplay']）（可选）
+ *   page       - 页数（可选）
+ *   sort       - 排序（可选）
  * }
  * @return Comics
  */
@@ -354,11 +354,11 @@ PicaComicAPI.prototype.search(payload: { token: string, keyword: string, categor
 
 ```typescript
 /**
- * Switch the comic as like or unlike using the given payload.
+ * 使用给定的有效负载将漫画切换为喜欢或不喜欢。
  *
  * @param payload - {
- *   toke  - Access token
- *   id    - Comic id
+ *   toke  - 访问令牌
+ *   id    - 漫画 ID
  * }
  * @return 'like' | 'unlike'
  */
@@ -372,11 +372,11 @@ PicaComicAPI.prototype.switchComicLike(payload: { token: string, id: string }): 
 
 ```typescript
 /**
- * Switch the comic as favourite or un_favourite using the given payload.
+ * 使用给定的有效负载将漫画切换为收藏或取消收藏。
  *
  * @param payload - {
- *   toke  - Access token
- *   id    - Comic id
+ *   toke  - 访问令牌
+ *   id    - 漫画 ID
  * }
  * @return 'favourite' | 'un_favourite'
  */
@@ -390,11 +390,11 @@ PicaComicAPI.prototype.switchComicFavourite(payload: { token: string, id: string
 
 ```typescript
 /**
- * Set the slogan of the user profile with the given payload.
+ * 使用给定的有效负载设置用户档案的签名。
  *
  * @param payload - {
- *   toke   - Access token
- *   slogan - Slogan (Cannot be blank)
+ *   toke   - 访问令牌
+ *   slogan - 签名（不能是空白的）
  * }
  * @return Response
  */
@@ -405,9 +405,9 @@ PicaComicAPI.prototype.setUserProfileSlogan(payload: { token: string, slogan: st
 
 ## Service
 
-The service is just a wrapper for a single account operation, and does not need to handle the problem of token invalidation by itself.
+服务只是对单个账户操作的封装，不需要自己去处理令牌失效的问题。
 
-> Note: Service does not provide `register` and `signIn` functions.
+> 注意：服务不提供 `register` 和 `signIn` 方法。
 
 ```typescript
 import { PicaComicService } from '@l2studio/picacomic-api'
@@ -425,13 +425,13 @@ class PicaComicService(opts: ServiceOptions) {
 
 ```typescript
 type ServiceOptions = Partial<Omit<Options, 'reauthorizationTokenCallback'>> & {
-  email: string         // PicaComic account email
-  password: string      // PicaComic account password
-  token?: string        // PicaComic account access token (Optional)
-  // Callback function for re-authenticate and consuming a new token when the token is invalid. (Optional)
-  // Example:
+  email: string         // PicaComic 哔咔账户邮箱
+  password: string      // PicaComic 哔咔账户密码
+  token?: string        // PicaComic 账户访问令牌（可选）
+  // 当令牌无效时，用于重新认证和使用新令牌的回调函数。（可选）
+  // 例子:
   //   onReauthorizationToken (token) {
-  //     console.log('New token:', token)
+  //     console.log('新的令牌:', token)
   //     fs.writeFileSync('token.txt', token)
   //   }
   onReauthorizationToken?: (token: string) => void | Promise<void>
@@ -440,21 +440,21 @@ type ServiceOptions = Partial<Omit<Options, 'reauthorizationTokenCallback'>> & {
 
 ### Example
 
-When the token expires, it will re-login and renew the token and persistence. No need to provide token every time.
+当令牌过期时，它将重新登录并更新令牌和持久化。无需每次都提供令牌。
 
 ```typescript
 import { PicaComicService } from '@l2studio/picacomic-api'
 import path from 'path'
 import fs from 'fs'
 
-const tokenFile = path.join(__dirname, '.token') // Persistent token
+const tokenFile = path.join(__dirname, '.token') // 持久化令牌
 const picacomic = new PicaComicService({
-  email   : 'your picacomic email',
-  password: 'your picacomic password',
+  email   : '你的 PicaComic 哔咔账户邮箱',
+  password: '你的 PicaComic 哔咔账户密码',
   token: fs.readFileSync(tokenFile, 'utf8'),
   onReauthorizationToken (token) {
     console.log('New token:', token)
-    fs.writeFileSync(tokenFile, token) // Update persistent token
+    fs.writeFileSync(tokenFile, token) // 更新持久化令牌
   }
 })
 
