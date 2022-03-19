@@ -4,6 +4,7 @@ import { httpOverHttp, httpsOverHttp } from 'tunnel'
 import { v4 as uuidv4 } from 'uuid'
 import { createHmac } from 'crypto'
 import got, { HTTPError } from 'got'
+import { isPromise } from './util'
 
 const debug = require('debug')('lgou2w:picacomic-api')
 
@@ -57,10 +58,6 @@ function mergeObjectProperty (src: any, value: any, property: string) {
 
 function makeAuthorizationHeaders (token: string) {
   return { authorization: token }
-}
-
-function isPromise<T = any> (obj: any): obj is Promise<T> {
-  return !!obj && (typeof obj === 'object' || typeof obj === 'function') && typeof obj.then === 'function'
 }
 
 type Response<T> = {
@@ -216,7 +213,7 @@ export class PicaComicAPI {
       .catch(catchError)
   }
 
-  async fetchUserFavourite (payload: { token: string, page?: number, sort?: 'ua' | 'dd' | 'da' | 'ld' | 'vd' }): Promise<types.Comics> {
+  async fetchUserFavourite (payload: { token: string, page?: number, sort?: types.ComicSort }): Promise<types.Comics> {
     return this.fetch
       .get('users/favourite', {
         headers: makeAuthorizationHeaders(payload.token),
@@ -238,7 +235,7 @@ export class PicaComicAPI {
       .catch(catchError)
   }
 
-  async fetchComics (payload: { token: string, category: string, page?: number, sort?: 'ua' | 'dd' | 'da' | 'ld' | 'vd' }): Promise<types.Comics> {
+  async fetchComics (payload: { token: string, category: string, page?: number, sort?: types.ComicSort }): Promise<types.Comics> {
     return this.fetch
       .get('comics', {
         headers: makeAuthorizationHeaders(payload.token),
@@ -326,7 +323,7 @@ export class PicaComicAPI {
     keyword: string
     categories?: string[]
     page?: number
-    sort?: 'ua' | 'dd' | 'da' | 'ld' | 'vd'
+    sort?: types.ComicSort
   }): Promise<types.Comics> {
     return this.fetch
       .post('comics/advanced-search', {

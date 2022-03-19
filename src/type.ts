@@ -137,3 +137,13 @@ export interface ComicEpisodePages {
     title: string
   }
 }
+
+export type ComicSort = 'ua' | 'dd' | 'da' | 'ld' | 'vd'
+
+export const ComicSorts: Record<'DEFAULT' | 'NEW_TO_OLD' | 'OLD_TO_NEW' | 'LIKE' | 'VIEW', ComicSort> = {
+  DEFAULT: 'ua',
+  NEW_TO_OLD: 'dd',
+  OLD_TO_NEW: 'da',
+  LIKE: 'ld',
+  VIEW: 'vd'
+}
