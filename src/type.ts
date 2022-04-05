@@ -53,6 +53,23 @@ export interface Comic {
   thumb: Image
 }
 
+export interface SearchedComic {
+  _id: string
+  title: string
+  author?: string
+  totalViews: number
+  totalLikes: number
+  likesCount: number
+  finished: boolean
+  categories: string[]
+  thumb: Image
+  chineseTeam: string
+  description?: string
+  tags: string[]
+  updated_at: string
+  created_at: string
+}
+
 export interface Paginate<T> {
   docs: T
   total: number
@@ -62,6 +79,8 @@ export interface Paginate<T> {
 }
 
 export interface Comics extends Paginate<Comic[]> {}
+
+export interface SearchedComics extends Paginate<SearchedComic[]> {}
 
 export interface Creator {
   _id: string

@@ -324,7 +324,7 @@ export class PicaComicAPI {
     categories?: string[]
     page?: number
     sort?: types.ComicSort
-  }): Promise<types.Comics> {
+  }): Promise<types.SearchedComics> {
     return this.fetch
       .post('comics/advanced-search', {
         headers: makeAuthorizationHeaders(payload.token),
@@ -335,7 +335,7 @@ export class PicaComicAPI {
           s: payload.sort || 'ua'
         }
       })
-      .json<Response<{ comics: types.Comics }>>()
+      .json<Response<{ comics: types.SearchedComics }>>()
       .then(res => res.data.comics)
       .catch(catchError)
   }
