@@ -403,7 +403,7 @@ PicaComicAPI.prototype.setUserProfileSlogan(payload: { token: string, slogan: st
 
 </details>
 
-## Service
+## 服务
 
 服务只是对单个账户操作的封装，不需要自己去处理令牌失效的问题。
 
@@ -421,7 +421,7 @@ class PicaComicService(opts: ServiceOptions) {
 }
 ```
 
-### Options
+### 选项
 
 ```typescript
 type ServiceOptions = Partial<Omit<Options, 'reauthorizationTokenCallback'>> & {
@@ -438,7 +438,7 @@ type ServiceOptions = Partial<Omit<Options, 'reauthorizationTokenCallback'>> & {
 }
 ```
 
-### Example
+### 例子
 
 当令牌过期时，它将重新登录并更新令牌和持久化。无需每次都提供令牌。
 
@@ -453,7 +453,7 @@ const picacomic = new PicaComicService({
   password: '你的 PicaComic 哔咔账户密码',
   token: fs.readFileSync(tokenFile, 'utf8'),
   onReauthorizationToken (token) {
-    console.log('New token:', token)
+    console.log('新的令牌:', token)
     fs.writeFileSync(tokenFile, token) // 更新持久化令牌
   }
 })
@@ -464,6 +464,6 @@ const picacomic = new PicaComicService({
 })()
 ```
 
-## License
+## 协议
 
 Apache-2.0
