@@ -342,9 +342,9 @@ PicaComicAPI.prototype.fetchImage(payload: { path: string, fileServer?: string }
  *   page       - Page number (optional)
  *   sort       - Sorting type (optional)
  * }
- * @return Comics
+ * @return SearchedComics
  */
-PicaComicAPI.prototype.search(payload: { token: string, keyword: string, categories?: string[], page?: number, sort?: ComicSort }): Promise<Comics>
+PicaComicAPI.prototype.search(payload: { token: string, keyword: string, categories?: string[], page?: number, sort?: ComicSort }): Promise<SearchedComics>
 ```
 
 </details>
