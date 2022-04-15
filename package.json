@@ -39,13 +39,13 @@
     "uuid": "^8.3.2"
   },
   "devDependencies": {
-    "@types/node": "^16",
+    "@types/node": "^16.11.27",
     "@types/tunnel": "^0.0.3",
     "@types/uuid": "^8.3.4",
-    "@typescript-eslint/eslint-plugin": "^5.18.0",
-    "@typescript-eslint/parser": "^5.18.0",
+    "@typescript-eslint/eslint-plugin": "^5.19.0",
+    "@typescript-eslint/parser": "^5.19.0",
     "cross-env": "^7.0.3",
-    "eslint": "^8.12.0",
+    "eslint": "^8.13.0",
     "eslint-config-standard": "^17.0.0-1",
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-n": "^15.1.0",
