@@ -1,37 +1,66 @@
-import type * as types from './type'
-import type { Duplex } from 'stream'
-import { httpOverHttp, httpsOverHttp } from 'tunnel'
+import got, { Got, Options, ExtendOptions, Response } from 'got'
+import {
+  BaseResponse,
+  RegisterPayload,
+  SignInPayload,
+  SignInResponse,
+  AuthorizationPayload,
+  PunchInResponse,
+  UserProfileResponse,
+  ComicSort,
+  UserFavouritePayload,
+  UserFavouriteResponse,
+  CategoriesResponse,
+  ComicsPayload,
+  ComicsResponse,
+  ComicIdPayload,
+  ComicDetailPayload,
+  ComicDetailResponse,
+  ComicEpisodesPayload,
+  ComicEpisodesResponse,
+  ComicEpisodePagesPayload,
+  ComicEpisodePagesResponse,
+  ComicCommentsPayload,
+  ComicCommentsResponse,
+  SearchComicsPayload,
+  SearchComicsResponse,
+  SwitchComicLikeResponse,
+  SwitchComicFavouriteResponse,
+  UserProfileSloganPayload
+} from './type'
 import { v4 as uuidv4 } from 'uuid'
 import { createHmac } from 'crypto'
-import got, { HTTPError } from 'got'
-import { isPromise } from './util'
+import assert from 'assert'
 
-const debug = require('debug')('lgou2w:picacomic-api')
-
-export type Options = {
-  timeout?: number
-  proxy?: {
-    host: string
-    port: number
-  }
-  app: {
-    api: string
-    apiKey: string
-    signatureKey: string
-    accept: string
-    channel: '1' | '2' | '3'
-    version: string
-    uuid: string
-    platform: string
-    buildVersion: string
-    userAgent: string
-    imageQuality: 'original' | 'low' | 'medium' | 'high'
-  }
-  // eslint-disable-next-line no-use-before-define
-  reauthorizationTokenCallback?: (self: PicaComicAPI) => string | undefined | Promise<string | undefined>
+export interface PicaComicOptions {
+  api: string
+  apiKey: string
+  signatureKey: string
+  accept: string
+  channel: '1' | '2' | '3'
+  version: string
+  uuid: string
+  platform: string
+  buildVersion: string
+  userAgent: string
+  imageQuality: 'original' | 'low' | 'medium' | 'high'
 }
 
-const DEFAULT_OPTION_APP: Options['app'] = {
+interface FetcherInstanceHolder {
+  fetch: Got
+  appOptions?: Partial<PicaComicOptions>
+}
+
+type EndpointPayloadTransformer<T = unknown> = (payload: T) => Options | undefined
+type DeclaredEndpoint<R extends BaseResponse, T = unknown> = (payload: T) => Promise<R>
+type DeclaredEndpointWithFetcher<R extends BaseResponse, T = unknown> = (fetcher: FetcherInstanceHolder, payload: T) => Promise<R>
+
+type PickDeclaredEndpointFromInstance<Instance> =
+  Instance extends DeclaredEndpointWithFetcher<infer R, infer T>
+    ? DeclaredEndpoint<R, T>
+    : never
+
+const defaultPicaComicOptions: PicaComicOptions = {
   api: 'https://picaapi.picacomic.com/',
   apiKey: 'C69BAF41DA5ABD1FFEDC6D2FEA56B',
   signatureKey: '~d}$Q7$eIni=V)9\\RK/P.RM4;9[7|@/CA}b~OW!3?EV`:<>M7pddUBL5n|0/*Cn',
@@ -45,326 +74,265 @@ const DEFAULT_OPTION_APP: Options['app'] = {
   imageQuality: 'original'
 }
 
-function mergeOptions (opts: Partial<Options>): Options {
-  const result: any = { ...opts }
-  mergeObjectProperty(result, DEFAULT_OPTION_APP, 'app')
-  return result
+function fixedSearchParams (searchParams?: Options['searchParams']): string {
+  if (typeof searchParams === 'string') {
+    return searchParams[0] === '?' ? searchParams : '?' + searchParams
+  } else if (searchParams instanceof URLSearchParams) {
+    return `?${searchParams.toString()}`
+  } else if (typeof searchParams === 'object') {
+    const params = Object.entries(searchParams).map(([key, value]) => `${key}=${value}`)
+    return `?${params.join('&')}`
+  } else {
+    return ''
+  }
 }
 
-function mergeObjectProperty (src: any, value: any, property: string) {
-  if (!src[property]) src[property] = value
-  else for (const key in value) src[property][key] = value[key]
+function getBeforeRequestOptions (transformedOptions: Options, appOptions?: Partial<PicaComicOptions>): Options {
+  assert(transformedOptions.url && typeof transformedOptions.url === 'string', 'endpoint must be a string')
+  assert(transformedOptions.method, 'method is required')
+
+  const method = transformedOptions.method
+  const endpoint = transformedOptions.url + fixedSearchParams(transformedOptions.searchParams)
+  const fixedEndpoint = endpoint[0] === '/' ? endpoint.substring(1) : endpoint
+  delete transformedOptions.url // must override prefix url and endpoint
+
+  const mergedPicaComicOptions = { ...defaultPicaComicOptions, ...appOptions }
+  const timestamp = (Date.now() / 1000).toFixed(0)
+  const nonce = uuidv4().replace(/-/g, '')
+  const con = (fixedEndpoint + timestamp + nonce + method + mergedPicaComicOptions.apiKey).toLowerCase()
+  const signature = createHmac('sha256', mergedPicaComicOptions.signatureKey).update(con).digest().toString('hex')
+
+  const headers: Options['headers'] = {}
+  headers.time = timestamp
+  headers.nonce = nonce
+  headers.signature = signature
+  headers.accept = mergedPicaComicOptions.accept
+  headers['api-key'] = mergedPicaComicOptions.apiKey
+  headers['app-channel'] = mergedPicaComicOptions.channel
+  headers['app-version'] = mergedPicaComicOptions.version
+  headers['app-uuid'] = mergedPicaComicOptions.uuid
+  headers['app-platform'] = mergedPicaComicOptions.platform
+  headers['app-build-version'] = mergedPicaComicOptions.buildVersion
+  headers['image-quality'] = mergedPicaComicOptions.imageQuality
+  headers['user-agent'] = mergedPicaComicOptions.userAgent
+  headers['content-type'] = 'application/json; charset=UTF-8'
+
+  return {
+    prefixUrl: mergedPicaComicOptions.api,
+    url: fixedEndpoint,
+    headers,
+    throwHttpErrors: false,
+    responseType: 'json'
+  }
 }
 
-function makeAuthorizationHeaders (token: string) {
-  return { authorization: token }
-}
-
-type Response<T> = {
-  code: number
-  message: string
-  data: T
+function declareEndpoint <R extends BaseResponse, T> (
+  transformer: EndpointPayloadTransformer<T>,
+  bodyHandler?: (body: BaseResponse) => R
+): DeclaredEndpointWithFetcher<R, T> {
+  return async function declaredEndpoint (fetcher, payload) {
+    const transformedOptions = transformer(payload) || {}
+    const beforeRequestOptions = getBeforeRequestOptions(transformedOptions, fetcher.appOptions)
+    const mergedOptions = fetcher.fetch.mergeOptions(transformedOptions, beforeRequestOptions)
+    const response = await fetcher.fetch(mergedOptions) as Response<unknown>
+    const body = await response.body as R | PicaComicError
+    if ('error' in body && typeof body.error === 'string') {
+      throw new PicaComicError(body.code, body.error, body.message, body.detail)
+    } else {
+      return typeof bodyHandler === 'function'
+        ? bodyHandler(body as BaseResponse)
+        : body as R
+    }
+  }
 }
 
 export class PicaComicError extends Error {
-  constructor (
-    readonly cause: HTTPError | Error,
-    readonly code: number,
-    readonly error: string,
-    readonly message: string,
-    readonly detail?: string
-  ) {
+  readonly code: number
+  readonly error: string
+  readonly detail?: string
+  constructor (code: number, error: string, message: string, detail?: string) {
     super(message)
     this.name = 'PicaComicError'
+    this.code = code
+    this.error = error
+    this.detail = detail
   }
 }
 
-function catchError (err: HTTPError | Error): Promise<never> {
-  let wrap: PicaComicError
-  if (err instanceof HTTPError && err.response.body) {
-    const { code, error, message, detail } = JSON.parse(err.response.body as string)
-    wrap = new PicaComicError(err, code, error, message, detail)
-  } else {
-    wrap = new PicaComicError(err, -1, 'Error', err.message)
-  }
-  Error.captureStackTrace(wrap, catchError)
-  return Promise.reject(wrap)
-}
+/* Endpoints */
 
-export class PicaComicAPI {
-  public readonly fetch: typeof got
-  public readonly options: Readonly<Options>
-
-  constructor (opts?: Partial<Options>) {
-    opts = opts || {}
-    this.options = mergeOptions(opts)
-    this.fetch = got.extend({
-      prefixUrl: this.options.app.api,
-      maxRedirects: 0,
-      followRedirect: false,
-      timeout: opts.timeout,
-      retry: 0,
-      agent: opts.proxy
-        ? {
-            http: httpOverHttp({ proxy: opts.proxy }),
-            https: httpsOverHttp({ proxy: opts.proxy }) as any
-          }
-        : undefined,
-      hooks: {
-        beforeRequest: [
-          options => {
-            if (options.context.fetchImage) return // skip image fetch
-            const url = options.url.toString()
-            const method = options.method
-            debug('FETCH -> %s %s', method, url)
-            const {
-              api, apiKey, signatureKey,
-              channel, version, uuid, platform, buildVersion,
-              accept, userAgent, imageQuality
-            } = this.options.app
-            const nonce = uuidv4().replace(/-/g, '')
-            const time = (Date.now() / 1000).toFixed(0)
-            const con = (
-              (url.charAt(0) === '/' ? url.substring(1) : url).replace(api, '') +
-              time + nonce + method + apiKey
-            ).toLowerCase()
-            const signature = createHmac('sha256', signatureKey).update(con).digest().toString('hex')
-            options.headers['content-type'] === 'application/json' && (options.headers['content-type'] = 'application/json; charset=UTF-8')
-            mergeObjectProperty(options, {
-              time,
-              nonce,
-              accept,
-              signature,
-              'api-key': apiKey,
-              'app-channel': channel,
-              'app-version': version,
-              'app-uuid': uuid,
-              'app-platform': platform,
-              'app-build-version': buildVersion,
-              'user-agent': userAgent,
-              'image-quality': imageQuality
-            }, 'headers')
-          }
-        ],
-        afterResponse: [
-          async (response, retryWithMergedOptions) => {
-            if (response.statusCode !== 401) return response
-            if (typeof this.options.reauthorizationTokenCallback !== 'function') return response
-            debug('REAUTHORIZATION TOKEN')
-            let token = this.options.reauthorizationTokenCallback(this)
-            isPromise(token) && (token = await token)
-            if (!token) return response
-            const updatedOptions = { headers: makeAuthorizationHeaders(token) }
-            return retryWithMergedOptions(updatedOptions)
-          }
-        ]
-      }
-    })
-  }
-
-  async register (payload: {
-    name: string
-    email: string
-    password: string
-    question1: string
-    question2: string
-    question3: string
-    answer1: string
-    answer2: string
-    answer3: string
-    birthday: string | Date | number
-    gender: 'm' | 'f' | 'bot'
-  }): Promise<Response<void>> {
+export const Endpoints = {
+  register: declareEndpoint<BaseResponse<undefined>, RegisterPayload>(payload => {
     if (payload.birthday instanceof Date) {
       payload.birthday = payload.birthday.valueOf()
     }
-    return this.fetch
-      .post('auth/register', { json: payload })
-      .json<Response<void>>()
-      .catch(catchError)
-  }
-
-  async signIn (payload: { email: string, password: string }): Promise<string> {
-    return this.fetch
-      .post('auth/sign-in', {
-        json: {
-          email: payload.email,
-          password: payload.password
-        }
-      })
-      .json<Response<{ token: string }>>()
-      .then(res => res.data.token)
-      .catch(catchError)
-  }
-
-  async punchIn (payload: { token: string }): Promise<types.PunchInResponse> {
-    return this.fetch
-      .post('users/punch-in', { headers: makeAuthorizationHeaders(payload.token) })
-      .json<Response<{ res: types.PunchInResponse }>>()
-      .then(res => res.data.res)
-      .catch(catchError)
-  }
-
-  async fetchUserProfile (payload: { token: string }): Promise<types.User> {
-    return this.fetch
-      .get('users/profile', { headers: makeAuthorizationHeaders(payload.token) })
-      .json<Response<{ user: types.User }>>()
-      .then(res => res.data.user)
-      .catch(catchError)
-  }
-
-  async fetchUserFavourite (payload: { token: string, page?: number, sort?: types.ComicSort }): Promise<types.Comics> {
-    return this.fetch
-      .get('users/favourite', {
-        headers: makeAuthorizationHeaders(payload.token),
-        searchParams: {
-          page: payload.page || 1,
-          s: payload.sort || 'ua'
-        }
-      })
-      .json<Response<{ comics: types.Comics }>>()
-      .then(res => res.data.comics)
-      .catch(catchError)
-  }
-
-  async fetchCategories (payload: { token: string }): Promise<types.Category[]> {
-    return this.fetch
-      .get('categories', { headers: makeAuthorizationHeaders(payload.token) })
-      .json<Response<{ categories: types.Category[] }>>()
-      .then(res => res.data.categories)
-      .catch(catchError)
-  }
-
-  async fetchComics (payload: { token: string, category: string, page?: number, sort?: types.ComicSort }): Promise<types.Comics> {
-    return this.fetch
-      .get('comics', {
-        headers: makeAuthorizationHeaders(payload.token),
-        searchParams: {
-          c: payload.category,
-          page: payload.page || 1,
-          s: payload.sort || 'ua'
-        }
-      })
-      .json<Response<{ comics: types.Comics }>>()
-      .then(res => res.data.comics)
-      .catch(catchError)
-  }
-
-  async fetchComic (payload: { token: string, id: string }): Promise<types.ComicInfo> {
-    return this.fetch
-      .get(`comics/${payload.id}`, { headers: makeAuthorizationHeaders(payload.token) })
-      .json<Response<{ comic: types.ComicInfo }>>()
-      .then(res => res.data.comic)
-      .catch(catchError)
-  }
-
-  async fetchComicComments (payload: { token: string, comicId: string, page?: number }): Promise<types.ComicComments> {
-    return this.fetch
-      .get(`comics/${payload.comicId}/comments`, {
-        headers: makeAuthorizationHeaders(payload.token),
-        searchParams: {
-          page: payload.page || 1
-        }
-      })
-      .json<Response<{ comments: types.Paginate<types.ComicComment[]>, topComments: types.ComicComment[] }>>()
-      .then(res => res.data)
-      .catch(catchError)
-  }
-
-  async fetchComicEpisodes (payload: { token: string, comicId: string, page?: number }): Promise<types.ComicEpisodes> {
-    return this.fetch
-      .get(`comics/${payload.comicId}/eps`, {
-        headers: makeAuthorizationHeaders(payload.token),
-        searchParams: {
-          page: payload.page || 1
-        }
-      })
-      .json<Response<{ eps: types.ComicEpisodes }>>()
-      .then(res => res.data.eps)
-      .catch(catchError)
-  }
-
-  async fetchComicEpisodePages (payload: { token: string, comicId: string, epsOrder: number, page?: number }): Promise<types.ComicEpisodePages> {
-    return this.fetch
-      .get(`comics/${payload.comicId}/order/${payload.epsOrder}/pages`, {
-        headers: makeAuthorizationHeaders(payload.token),
-        searchParams: {
-          page: payload.page || 1
-        }
-      })
-      .json<Response<types.ComicEpisodePages>>()
-      .then(res => res.data)
-      .catch(catchError)
-  }
-
-  stringifyImageUrl (image: { path: string, fileServer?: string }): string {
-    let { path, fileServer } = image
-
-    if (path.startsWith('tobeimg/')) {
-      fileServer = fileServer || 'https://img.picacomic.com'
-      path = '/' + path.substring(8)
-    } else if (path.startsWith('tobs/')) {
-      fileServer = fileServer || 'https://storage-b.picacomic.com'
-      path = '/static/' + path.substring(5)
-    } else {
-      fileServer = fileServer || 'https://storage1.picacomic.com'
-      path = '/static/' + path
+    return {
+      url: '/auth/register',
+      method: 'POST',
+      json: payload
     }
-    return fileServer.replace(/\/$/, '') + path
+  }),
+  signIn: declareEndpoint<SignInResponse, SignInPayload>(payload => ({
+    url: '/auth/sign-in',
+    method: 'POST',
+    json: {
+      email: payload.email,
+      password: payload.password
+    }
+  })),
+  punchIn: declareEndpoint<PunchInResponse, AuthorizationPayload>(payload => ({
+    url: '/users/punch-in',
+    method: 'POST',
+    headers: { authorization: payload.token }
+  })),
+  fetchUserProfile: declareEndpoint<UserProfileResponse, AuthorizationPayload>(payload => ({
+    url: '/users/profile',
+    method: 'GET',
+    headers: { authorization: payload.token }
+  })),
+  fetchUserFavourite: declareEndpoint<UserFavouriteResponse, AuthorizationPayload & UserFavouritePayload>(payload => ({
+    url: '/users/favourite',
+    method: 'GET',
+    headers: { authorization: payload.token },
+    searchParams: {
+      page: payload.page || 1,
+      s: payload.sort || ComicSort.Default
+    }
+  })),
+  fetchCategories: declareEndpoint<CategoriesResponse, AuthorizationPayload>(payload => ({
+    url: '/categories',
+    method: 'GET',
+    headers: { authorization: payload.token }
+  })),
+  fetchComics: declareEndpoint<ComicsResponse, AuthorizationPayload & ComicsPayload>(payload => ({
+    url: '/comics',
+    method: 'GET',
+    headers: { authorization: payload.token },
+    searchParams: {
+      c: payload.category,
+      page: payload.page || 1,
+      s: payload.sort || ComicSort.Default
+    }
+  })),
+  fetchComicDetail: declareEndpoint<ComicDetailResponse, AuthorizationPayload & ComicDetailPayload>(payload => ({
+    url: `/comics/${payload.comicId}`,
+    method: 'GET',
+    headers: { authorization: payload.token }
+  })),
+  fetchComicEpisodes: declareEndpoint<ComicEpisodesResponse, AuthorizationPayload & ComicEpisodesPayload>(payload => ({
+    url: `/comics/${payload.comicId}/eps`,
+    method: 'GET',
+    headers: { authorization: payload.token },
+    searchParams: { page: payload.page || 1 }
+  })),
+  fetchComicEpisodePages: declareEndpoint<ComicEpisodePagesResponse, AuthorizationPayload & ComicEpisodePagesPayload>(payload => ({
+    url: `/comics/${payload.comicId}/order/${payload.order}/pages`,
+    method: 'GET',
+    headers: { authorization: payload.token },
+    searchParams: { page: payload.page || 1 }
+  })),
+  fetchComicComments: declareEndpoint<ComicCommentsResponse, AuthorizationPayload & ComicCommentsPayload>(payload => ({
+    url: `/comics/${payload.comicId}/comments`,
+    method: 'GET',
+    headers: { authorization: payload.token },
+    searchParams: { page: payload.page || 1 }
+  }), (body) => {
+    // Fixed page type problem
+    if (body.data !== null && typeof body.data === 'object' && 'comments' in body.data) {
+      const comments = (body.data as ComicCommentsResponse['data']).comments
+      if (comments && typeof comments.page === 'string') {
+        comments.page = parseInt(comments.page)
+      }
+    } return body as ComicCommentsResponse
+  }),
+  searchComics: declareEndpoint<SearchComicsResponse, AuthorizationPayload & SearchComicsPayload>(payload => ({
+    url: '/comics/advanced-search',
+    method: 'POST',
+    headers: { authorization: payload.token },
+    searchParams: { page: payload.page || 1 },
+    json: {
+      keyword: payload.keyword,
+      categories: payload.categories,
+      s: payload.sort || ComicSort.Default
+    }
+  })),
+  switchComicLike: declareEndpoint<SwitchComicLikeResponse, AuthorizationPayload & ComicIdPayload>(payload => ({
+    url: `/comics/${payload.comicId}/like`,
+    method: 'POST',
+    headers: { authorization: payload.token }
+  })),
+  switchComicFavourite: declareEndpoint<SwitchComicFavouriteResponse, AuthorizationPayload & ComicIdPayload>(payload => ({
+    url: `/comics/${payload.comicId}/favourite`,
+    method: 'POST',
+    headers: { authorization: payload.token }
+  })),
+  setUserProfileSlogan: declareEndpoint<BaseResponse<undefined>, AuthorizationPayload & UserProfileSloganPayload>(payload => ({
+    url: '/users/profile',
+    method: 'PUT',
+    headers: { authorization: payload.token },
+    json: { slogan: payload.slogan }
+  }))
+}
+
+export interface PicaComicAPIOptions {
+  fetch?: Got | ExtendOptions
+  appOptions?: Partial<PicaComicOptions>
+  // eslint-disable-next-line no-use-before-define
+  reauthorizationTokenCallback?: (self: PicaComicAPI) => string | undefined | Promise<string | undefined>
+}
+
+function createReauthorizationTokenHook (self: PicaComicAPI): ExtendOptions {
+  return {
+    hooks: {
+      afterResponse: [async (response, retryWithMergedOptions) => {
+        if (response.statusCode !== 401) return response
+        if (typeof self.reauthorizationTokenCallback !== 'function') return response
+
+        const token = await self.reauthorizationTokenCallback(self)
+        if (!token) return response
+
+        const updatedOptions = { headers: { authorization: token } }
+        return retryWithMergedOptions(updatedOptions)
+      }]
+    }
+  }
+}
+
+export class PicaComicAPI implements FetcherInstanceHolder {
+  public readonly fetch: Got
+  public readonly appOptions?: Partial<PicaComicOptions>
+  public readonly reauthorizationTokenCallback?: (self: this) => string | undefined | Promise<string | undefined>
+
+  constructor (options?: PicaComicAPIOptions) {
+    this.appOptions = options?.appOptions
+    this.reauthorizationTokenCallback = options?.reauthorizationTokenCallback
+
+    const reauthorizationTokenHook = createReauthorizationTokenHook(this)
+    this.fetch = options?.fetch && typeof options.fetch === 'object'
+      ? got.extend(options.fetch, reauthorizationTokenHook)
+      : got.extend(reauthorizationTokenHook)
+
+    // create endpoint bindings
+    Object.entries(Endpoints).forEach(([key, value]) => {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      this[key] = value.bind(this, this)
+    })
   }
 
-  async fetchImage (image: { path: string, fileServer?: string }): Promise<Duplex> {
-    const url = this.stringifyImageUrl(image)
-    return this.fetch.stream({ prefixUrl: '', url, context: { fetchImage: true } })
-  }
-
-  async search (payload: {
-    token: string
-    keyword: string
-    categories?: string[]
-    page?: number
-    sort?: types.ComicSort
-  }): Promise<types.SearchedComics> {
-    return this.fetch
-      .post('comics/advanced-search', {
-        headers: makeAuthorizationHeaders(payload.token),
-        searchParams: { page: payload.page || 1 },
-        json: {
-          keyword: payload.keyword,
-          categories: payload.categories,
-          s: payload.sort || 'ua'
-        }
-      })
-      .json<Response<{ comics: types.SearchedComics }>>()
-      .then(res => res.data.comics)
-      .catch(catchError)
-  }
-
-  async switchComicLike (payload: { token: string, id: string }): Promise<'like' | 'unlike'> {
-    return this.fetch
-      .post(`comics/${payload.id}/like`, { headers: makeAuthorizationHeaders(payload.token) })
-      .json<Response<{ action: 'like' | 'unlike' }>>()
-      .then(res => res.data.action)
-      .catch(catchError)
-  }
-
-  async switchComicFavourite (payload: { token: string, id: string }): Promise<'favourite' | 'un_favourite'> {
-    return this.fetch
-      .post(`comics/${payload.id}/favourite`, { headers: makeAuthorizationHeaders(payload.token) })
-      .json<Response<{ action: 'favourite' | 'un_favourite' }>>()
-      .then(res => res.data.action)
-      .catch(catchError)
-  }
-
-  async setUserProfileSlogan (payload: { token: string, slogan: string }): Promise<Response<void>> {
-    return this.fetch
-      .put('users/profile', {
-        headers: makeAuthorizationHeaders(payload.token),
-        json: {
-          slogan: payload.slogan
-        }
-      })
-      .json<Response<void>>()
-      .catch(catchError)
-  }
+  readonly declare register: PickDeclaredEndpointFromInstance<typeof Endpoints.register>
+  readonly declare signIn: PickDeclaredEndpointFromInstance<typeof Endpoints.signIn>
+  readonly declare punchIn: PickDeclaredEndpointFromInstance<typeof Endpoints.punchIn>
+  readonly declare fetchUserProfile: PickDeclaredEndpointFromInstance<typeof Endpoints.fetchUserProfile>
+  readonly declare fetchUserFavourite: PickDeclaredEndpointFromInstance<typeof Endpoints.fetchUserFavourite>
+  readonly declare fetchCategories: PickDeclaredEndpointFromInstance<typeof Endpoints.fetchCategories>
+  readonly declare fetchComics: PickDeclaredEndpointFromInstance<typeof Endpoints.fetchComics>
+  readonly declare fetchComicDetail: PickDeclaredEndpointFromInstance<typeof Endpoints.fetchComicDetail>
+  readonly declare fetchComicEpisodes: PickDeclaredEndpointFromInstance<typeof Endpoints.fetchComicEpisodes>
+  readonly declare fetchComicEpisodePages: PickDeclaredEndpointFromInstance<typeof Endpoints.fetchComicEpisodePages>
+  readonly declare fetchComicComments: PickDeclaredEndpointFromInstance<typeof Endpoints.fetchComicComments>
+  readonly declare searchComics: PickDeclaredEndpointFromInstance<typeof Endpoints.searchComics>
+  readonly declare switchComicLike: PickDeclaredEndpointFromInstance<typeof Endpoints.switchComicLike>
+  readonly declare switchComicFavourite: PickDeclaredEndpointFromInstance<typeof Endpoints.switchComicFavourite>
+  readonly declare setUserProfileSlogan: PickDeclaredEndpointFromInstance<typeof Endpoints.setUserProfileSlogan>
 }

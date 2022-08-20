@@ -10,9 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [12.x]
+        node-version: [16.x]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Setup Node.js environment ${{ matrix.node-version }}
         uses: actions/setup-node@v2
@@ -22,7 +22,7 @@ jobs:
       - name: Setup PNPM
         uses: pnpm/action-setup@v2
         with:
-          version: 6.x.x
+          version: 7
           run_install: true
 
       - name: ESLint check
@@ -35,16 +35,16 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: actions/setup-node@v2
         with:
-          node-version: 12
+          node-version: 16
           registry-url: https://registry.npmjs.org/
 
       - name: Setup PNPM
         uses: pnpm/action-setup@v2
         with:
-          version: 6.x.x
+          version: 7
           run_install: true
 
       - name: Publish to NPM
@@ -56,17 +56,17 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: actions/setup-node@v2
         with:
-          node-version: 12
+          node-version: 16
           registry-url: https://npm.pkg.github.com/
           scope: '@l2studio'
 
       - name: Setup PNPM
         uses: pnpm/action-setup@v2
         with:
-          version: 6.x.x
+          version: 7
           run_install: true
 
       - run: echo registry=https://npm.pkg.github.com/l2studio >> .npmrc
@@ -80,7 +80,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           # Fetch all history
           fetch-depth: 0
@@ -111,14 +111,12 @@ jobs:
           changelog="${changelog//'%'/'%25'}"
           changelog="${changelog//$'\n'/'  %0A'}"
           echo "::set-output name=value::Change set since ${last_tag:-the beginning}:  %0A%0A$changelog"
+
       - name: GitHub Release
-        uses: actions/create-release@v1
+        uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN_GITHUB_PUBLISH }}
         with:
-          tag_name: ${{ github.ref }}
-          release_name: ${{ github.ref }}
-          draft: false
-          prerelease: false
+          token: ${{ secrets.TOKEN_GITHUB_PUBLISH }}
           body: |
             ${{ steps.changelog.outputs.value }}
