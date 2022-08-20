@@ -46,7 +46,7 @@ export interface User {
   character?: string
   role?: string
   created_at: string
-  avatar?: string
+  avatar?: ImageMedia
   isPunched: boolean
 }
 
