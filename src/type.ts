@@ -1,21 +1,41 @@
-/* eslint-disable camelcase */
-
-export interface Image {
-  originalName: string
-  path: string
-  fileServer: string
+export interface BaseResponse<T = unknown> {
+  code: number
+  message: string
+  data: T
 }
 
-export interface PunchInResponse {
-  status: 'ok' | 'fail'
-  punchInLastDay?: string
+export interface RegisterPayload {
+  name: string
+  email: string
+  password: string
+  question1: string
+  question2: string
+  question3: string
+  answer1: string
+  answer2: string
+  answer3: string
+  birthday: string | Date | number
+  gender: 'm' | 'f' | 'bot'
 }
+
+export interface SignInPayload {
+  email: string
+  password: string
+}
+
+export type SignInResponse = BaseResponse<{ token: string }>
+
+export interface AuthorizationPayload {
+  token: string
+}
+
+export type PunchInResponse = BaseResponse<{ res: { status: 'ok' | 'fail', punchInLastDay?: string } }>
 
 export interface User {
   _id: string
   birthday: string
   email: string
-  gender: string
+  gender: 'm' | 'f' | 'bot'
   name: string
   slogan?: string
   title: string
@@ -23,35 +43,182 @@ export interface User {
   exp: number
   level: number
   characters: string[]
+  character?: string
+  role?: string
   created_at: string
-  avatar?: Image
+  avatar?: string
   isPunched: boolean
 }
+
+export type UserProfileResponse = BaseResponse<{ user: User }>
+
+export enum ComicSort {
+  Default = 'ua',
+  NewToOld = 'dd',
+  OldToNew = 'da',
+  Like = 'ld',
+  View = 'vd'
+}
+
+export interface UserFavouritePayload {
+  page?: number
+  sort?: ComicSort
+}
+
+export interface ImageMedia {
+  originalName: string
+  path: string
+  fileServer: string
+}
+
+export interface Comic {
+  _id: string
+  title: string
+  author?: string
+  totalViews: number
+  totalLikes: number
+  pagesCount: number
+  epsCount: number
+  finished: boolean
+  categories: string[]
+  thumb: ImageMedia
+  likesCount: number
+}
+
+export type UserFavouriteResponse = BaseResponse<{
+  comics: {
+    docs: Comic[]
+    total: number
+    limit: number
+    page: number
+    pages: number
+  }
+}>
 
 export interface Category {
   _id: string
   title: string
-  thumb: Image
+  thumb: ImageMedia
   isWeb?: boolean
   active?: boolean
   link?: string
   description?: string
 }
 
-export interface Comic {
-  _id: string
-  id: string
-  title: string
-  author?: string
-  totalViews: number
-  totalLikes: number
-  likesCount: number
-  pagesCount: number
-  epsCount: number
-  finished: boolean
-  categories: string[]
-  thumb: Image
+export type CategoriesResponse = BaseResponse<{ categories: Category[] }>
+
+export interface ComicsPayload {
+  /** Category title */
+  category: string
+  page?: number
+  sort?: ComicSort
 }
+
+export type ComicsResponse = BaseResponse<{
+  comics: {
+    docs: (Comic & { id: string })[]
+    total: number
+    limit: number
+    page: number
+    pages: number
+  }
+}>
+
+export interface ComicDetail extends Comic {
+  _creator: Omit<User, 'birthday' | 'email' | 'created_at' | 'isPunched'>
+  chineseTeam: string
+  description?: string
+  tags: string[]
+  updated_at: string
+  created_at: string
+  allowDownload: boolean
+  allowComment: boolean
+  viewsCount: number
+  commentsCount: number
+  isFavourite: boolean
+  isLiked: boolean
+}
+
+export interface ComicIdPayload {
+  comicId: string
+}
+
+export type ComicDetailPayload = ComicIdPayload
+
+export type ComicDetailResponse = BaseResponse<{ comic: ComicDetail }>
+
+export interface ComicEpisode {
+  _id: string
+  title: string
+  order: number
+  updated_at: string
+  id: string
+}
+
+export interface ComicEpisodesPayload extends ComicIdPayload {
+  page?: number
+}
+
+export type ComicEpisodesResponse = BaseResponse<{
+  eps: {
+    docs: ComicEpisode[]
+    total: number
+    limit: number
+    page: number
+    pages: number
+  }
+}>
+
+export interface ComicEpisodePage {
+  _id: string
+  media: ImageMedia
+  id: string
+}
+
+export interface ComicEpisodePagesPayload extends ComicIdPayload {
+  order: number
+  page?: number
+}
+
+export type ComicEpisodePagesResponse = BaseResponse<{
+  pages: {
+    docs: ComicEpisodePage[]
+    total: number
+    limit: number
+    page: number
+    pages: number
+  },
+  ep: Pick<ComicEpisode, '_id' | 'title'>
+}>
+
+export interface ComicCommentsPayload extends ComicIdPayload {
+  page?: number
+}
+
+export interface ComicComment {
+  _id: string
+  _user: Omit<User, 'birthday' | 'email' | 'created_at' | 'isPunched'>
+  _comic: string
+  content: string
+  isTop: boolean
+  hide: boolean
+  created_at: string
+  likesCount: number
+  commentsCount: number
+  isLiked: boolean
+  id: string
+}
+
+export type ComicCommentsResponse = BaseResponse<{
+  comments: {
+    docs: ComicComment[]
+    total: number
+    limit: number
+    page: number
+    pages: number
+  }
+  topComments: ComicComment[]
+}>
 
 export interface SearchedComic {
   _id: string
@@ -62,7 +229,7 @@ export interface SearchedComic {
   likesCount: number
   finished: boolean
   categories: string[]
-  thumb: Image
+  thumb: ImageMedia
   chineseTeam: string
   description?: string
   tags: string[]
@@ -70,99 +237,27 @@ export interface SearchedComic {
   created_at: string
 }
 
-export interface Paginate<T> {
-  docs: T
-  total: number
-  limit: number
-  page: number
-  pages: number
+export interface SearchComicsPayload {
+  keyword: string
+  categories?: string[]
+  page?: number
+  sort?: ComicSort
 }
 
-export interface Comics extends Paginate<Comic[]> {}
+export type SearchComicsResponse = BaseResponse<{
+  comics: {
+    docs: SearchedComic[]
+    total: number
+    limit: number
+    page: number
+    pages: number
+  }
+}>
 
-export interface SearchedComics extends Paginate<SearchedComic[]> {}
+export type SwitchComicLikeResponse = BaseResponse<{ action: 'like' | 'unlike' }>
 
-export interface Creator {
-  _id: string
-  name: string
-  gender: string
-  verified: boolean
-  exp: number
-  level: number
-  characters: string[]
-  role: string
-  avatar: Image
-  title: string
+export type SwitchComicFavouriteResponse = BaseResponse<{ action: 'favourite' | 'un_favourite' }>
+
+export interface UserProfileSloganPayload {
   slogan: string
-  character: string
-}
-
-export interface ComicInfo extends Comic {
-  _creator: Creator
-  chineseTeam: string
-  description?: string
-  tags: string[]
-  updated_at: string
-  created_at: string
-  allowDownload: boolean
-  allowComment: boolean
-  isFavourite: boolean
-  isLiked: boolean
-  commentsCount: number
-}
-
-export interface ComicComment {
-  _id: string
-  id: string
-  content: string
-  _user: Omit<User, 'birthday' | 'email' | 'isPunched' | 'created_at'> & {
-    role: string
-    character?: string
-  }
-  _comic: string
-  isTop: boolean
-  hide: boolean
-  created_at: string
-  likesCount: number
-  commentsCount: number
-  isLiked: boolean
-}
-
-export interface ComicComments {
-  comments: Paginate<ComicComment[]>
-  topComments: ComicComment[]
-}
-
-export interface ComicEpisode {
-  _id: string
-  id: string
-  title: string
-  order: number
-  updated_at: string
-}
-
-export interface ComicEpisodes extends Paginate<ComicEpisode[]> {}
-
-export interface ComicEpisodePage {
-  _id: string
-  id: string
-  media: Image
-}
-
-export interface ComicEpisodePages {
-  pages: Paginate<ComicEpisodePage[]>
-  ep: {
-    _id: string
-    title: string
-  }
-}
-
-export type ComicSort = 'ua' | 'dd' | 'da' | 'ld' | 'vd'
-
-export const ComicSorts: Record<'DEFAULT' | 'NEW_TO_OLD' | 'OLD_TO_NEW' | 'LIKE' | 'VIEW', ComicSort> = {
-  DEFAULT: 'ua',
-  NEW_TO_OLD: 'dd',
-  OLD_TO_NEW: 'da',
-  LIKE: 'ld',
-  VIEW: 'vd'
 }
