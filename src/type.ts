@@ -31,6 +31,12 @@ export interface AuthorizationPayload {
 
 export type PunchInResponse = BaseResponse<{ res: { status: 'ok' | 'fail', punchInLastDay?: string } }>
 
+export interface ImageMedia {
+  originalName: string
+  path: string
+  fileServer: string
+}
+
 export interface User {
   _id: string
   birthday: string
@@ -63,12 +69,6 @@ export enum ComicSort {
 export interface UserFavouritePayload {
   page?: number
   sort?: ComicSort
-}
-
-export interface ImageMedia {
-  originalName: string
-  path: string
-  fileServer: string
 }
 
 export interface Comic {
