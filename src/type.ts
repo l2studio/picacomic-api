@@ -83,6 +83,7 @@ export interface Comic {
   categories: string[]
   thumb: ImageMedia
   likesCount: number
+  id?: string
 }
 
 export type UserFavouriteResponse = BaseResponse<{
@@ -96,7 +97,7 @@ export type UserFavouriteResponse = BaseResponse<{
 }>
 
 export interface Category {
-  _id: string
+  _id?: string
   title: string
   thumb: ImageMedia
   isWeb?: boolean
@@ -116,7 +117,7 @@ export interface ComicsPayload {
 
 export type ComicsResponse = BaseResponse<{
   comics: {
-    docs: (Comic & { id: string })[]
+    docs: Comic[]
     total: number
     limit: number
     page: number
@@ -124,8 +125,23 @@ export type ComicsResponse = BaseResponse<{
   }
 }>
 
+export interface Creator {
+  _id: string
+  gender: string
+  name: string
+  slogan?: string
+  title?: string
+  verified?: boolean
+  exp: number
+  level: number
+  characters: string[]
+  character?: string
+  role?: string
+  avatar?: ImageMedia
+}
+
 export interface ComicDetail extends Comic {
-  _creator: Omit<User, 'birthday' | 'email' | 'created_at' | 'isPunched'>
+  _creator: Creator
   chineseTeam: string
   description?: string
   tags: string[]
@@ -197,7 +213,7 @@ export interface ComicCommentsPayload extends ComicIdPayload {
 
 export interface ComicComment {
   _id: string
-  _user: Omit<User, 'birthday' | 'email' | 'created_at' | 'isPunched'>
+  _user: Creator
   _comic: string
   content: string
   isTop: boolean
@@ -224,13 +240,13 @@ export interface SearchedComic {
   _id: string
   title: string
   author?: string
-  totalViews: number
-  totalLikes: number
+  totalViews?: number
+  totalLikes?: number
   likesCount: number
   finished: boolean
   categories: string[]
   thumb: ImageMedia
-  chineseTeam: string
+  chineseTeam?: string
   description?: string
   tags: string[]
   updated_at: string
