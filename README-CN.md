@@ -390,6 +390,36 @@ const picacomic = new PicaComicClient({
 })()
 ```
 
+## 常见问题
+
+### 如何配置 HTTP 代理
+
+> 另见 Got：[agent](https://github.com/sindresorhus/got/tree/v11#agent).
+
+请配置 `PicaComicAPIOptions` 或 `PicaComicClientOptions` 的 `fetch` 属性。
+
+使用 [tunnel](https://github.com/koichik/node-tunnel) 的例子：
+
+```typescript
+import { PicaComicClient } from '@l2studio/picacomic-api'
+import tunnel from 'tunnel'
+
+const picacomic = new PicaComicClient({
+  fetch: {
+    agent: {
+      https: tunnel.httpsOverHttp({
+        // 你的 Http 代理服务器主机和端口
+        proxy: {
+          host: '127.0.0.1',
+          port: 10809
+        }
+      }) as any
+    }
+  },
+  ...other
+})
+```
+
 ## 协议
 
 Apache-2.0

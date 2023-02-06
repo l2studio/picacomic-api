@@ -389,6 +389,36 @@ const picacomic = new PicaComicClient({
 })()
 ```
 
+## FAQ
+
+### How to configure http proxy
+
+> See also Got [agent](https://github.com/sindresorhus/got/tree/v11#agent).
+
+Please configure the `fetch` property of `PicaComicAPIOptions` or `PicaComicClientOptions`.
+
+Example using [tunnel](https://github.com/koichik/node-tunnel):
+
+```typescript
+import { PicaComicClient } from '@l2studio/picacomic-api'
+import tunnel from 'tunnel'
+
+const picacomic = new PicaComicClient({
+  fetch: {
+    agent: {
+      https: tunnel.httpsOverHttp({
+        // Your http proxy server host and port
+        proxy: {
+          host: '127.0.0.1',
+          port: 10809
+        }
+      }) as any
+    }
+  },
+  ...other
+})
+```
+
 ## License
 
 Apache-2.0
