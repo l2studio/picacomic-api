@@ -28,8 +28,8 @@ pnpm i @l2studio/picacomic-api
 import { PicaComicAPI } from '@l2studio/picacomic-api'
 
 class PicaComicAPI {
-  public readonly fetch: typeof got
-  public readonly appOptions: Partial<PicaComicOptions>
+  public readonly fetch: Got
+  public readonly appOptions?: Partial<PicaComicOptions>
   public readonly reauthorizationTokenCallback?: (self: this) => string | undefined | Promise<string | undefined>
   constructor (options?: PicaComicAPIOptions)
 }
@@ -353,6 +353,7 @@ interface PicaComicClientOptions extends Omit<PicaComicAPIOptions, 'reauthorizat
   email: string         // PicaComic account email
   password: string      // PicaComic account password
   token?: string        // PicaComic account access token (Optional)
+
   // Callback function for re-authenticate and consuming a new token when the token is invalid. (Optional)
   // Example:
   //   onTokenIssued (token) {
@@ -384,8 +385,8 @@ const picacomic = new PicaComicClient({
 })
 
 ;(async () => {
-  const comics = await picacomic.fetchComics({ category: 'Cosplay' })
-  console.log(comics)
+  const response = await picacomic.fetchComics({ category: 'Cosplay' })
+  console.log(response)
 })()
 ```
 
@@ -395,7 +396,7 @@ const picacomic = new PicaComicClient({
 
 > See also Got [agent](https://github.com/sindresorhus/got/tree/v11#agent).
 
-Please configure the `fetch` property of `PicaComicAPIOptions` or `PicaComicClientOptions`.
+Please configure the `fetch` property of [`PicaComicAPIOptions`](#api-options) or [`PicaComicClientOptions`](#client-options).
 
 Example using [tunnel](https://github.com/koichik/node-tunnel):
 

@@ -28,14 +28,14 @@ pnpm i @l2studio/picacomic-api
 import { PicaComicAPI } from '@l2studio/picacomic-api'
 
 class PicaComicAPI {
-  public readonly fetch: typeof got
-  public readonly appOptions: Partial<PicaComicOptions>
+  public readonly fetch: Got
+  public readonly appOptions?: Partial<PicaComicOptions>
   public readonly reauthorizationTokenCallback?: (self: this) => string | undefined | Promise<string | undefined>
   constructor (options?: PicaComicAPIOptions)
 }
 ```
 
-### API Options
+### API 选项
 
 ```typescript
 interface PicaComicOptions {
@@ -53,7 +53,7 @@ interface PicaComicOptions {
 }
 
 interface PicaComicAPIOptions {
-  // Got 实例或扩展选项 (optional)
+  // Got 实例或扩展选项（可选）
   // 请见: https://github.com/sindresorhus/got/tree/v11
   fetch?: Got | ExtendOptions
 
@@ -320,9 +320,9 @@ PicaComicAPI.switchComicFavourite(payload: AuthorizationPayload & ComicIdPayload
 PicaComicAPI.setUserProfileSlogan(payload: AuthorizationPayload & UserProfileSloganPayload): Promise<BaseResponse<undefined>>
 ```
 
-## Client
+## 客户端
 
-服务只是对单个账户操作的封装，不需要自己去处理令牌失效的问题。
+客户端只是对单个账户操作的封装，不需要自己去处理令牌失效的问题。
 
 > 注意: 客户端类似 API，但是不提供 `register` 和 `signIn` 方法。其他方法的 `payload` 参数不需要再提供 `token` 访问令牌属性。
 
@@ -339,7 +339,7 @@ export class PicaComicClient {
 }
 ```
 
-### Client Options
+### 客户端选项
 
 ```typescript
 interface PicaComicClientOptions extends Omit<PicaComicAPIOptions, 'reauthorizationTokenCallback'> {
@@ -375,18 +375,18 @@ import fs from 'fs'
 
 const tokenFile = path.join(__dirname, '.token') // 持久化令牌
 const picacomic = new PicaComicClient({
-  email   : 'your picacomic email',
-  password: 'your picacomic password',
+  email   : '你的 PicaComic 哔咔账户邮箱',
+  password: '你的 PicaComic 哔咔账户密码',
   token: fs.existsSync(tokenFile) ? fs.readFileSync(tokenFile, 'utf8') : undefined,
   onTokenIssued (token) {
-    console.log('New token:', token)
+    console.log('新的令牌:', token)
     fs.writeFileSync(tokenFile, token) // 更新持久化令牌
   }
 })
 
 ;(async () => {
-  const comics = await picacomic.fetchComics({ category: 'Cosplay' })
-  console.log(comics)
+  const response = await picacomic.fetchComics({ category: 'Cosplay' })
+  console.log(response)
 })()
 ```
 
@@ -396,7 +396,7 @@ const picacomic = new PicaComicClient({
 
 > 另见 Got：[agent](https://github.com/sindresorhus/got/tree/v11#agent).
 
-请配置 `PicaComicAPIOptions` 或 `PicaComicClientOptions` 的 `fetch` 属性。
+请配置 [`PicaComicAPIOptions`](#api-选项) 或 [`PicaComicClientOptions`](#客户端选项) 的 `fetch` 属性。
 
 使用 [tunnel](https://github.com/koichik/node-tunnel) 的例子：
 
