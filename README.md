@@ -65,10 +65,11 @@ interface PicaComicAPIOptions {
   // Example:
   //   async reauthorizationTokenCallback (self) {
   //     console.log('Token invalid, re-authenticate...')
-  //     return await self.signIn({
+  //     const response = await self.signIn({
   //       email   : 'your picacomic account email',
   //       password: 'your picacomic account password'
   //     })
+  //     return response.data.token
   //   }
   reauthorizationTokenCallback?: (self: PicaComicAPI) => string | undefined | Promise<string | undefined>
 }

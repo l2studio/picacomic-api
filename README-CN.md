@@ -65,10 +65,11 @@ interface PicaComicAPIOptions {
   // 例子:
   //   async reauthorizationTokenCallback (self) {
   //     console.log('令牌无效, 重新认证...')
-  //     return await self.signIn({
+  //     const response = await self.signIn({
   //       email   : '你的 PicaComic 哔咔账户邮箱',
   //       password: '你的 PicaComic 哔咔账户密码'
   //     })
+  //     return response.data.token
   //   }
   reauthorizationTokenCallback?: (self: PicaComicAPI) => string | undefined | Promise<string | undefined>
 }
