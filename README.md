@@ -321,6 +321,51 @@ PicaComicAPI.switchComicFavourite(payload: AuthorizationPayload & ComicIdPayload
 PicaComicAPI.setUserProfileSlogan(payload: AuthorizationPayload & UserProfileSloganPayload): Promise<BaseResponse<undefined>>
 ```
 
+### .stringifyImageUrl
+
+```typescript
+/**
+ * Stringify the given image media data into image url.
+ *
+ * @param payload - ImageMediaPayload = ImageMedia | {
+ *   path       - Path name
+ *   fileServer - File server (Optional)
+ * }
+ * @return string
+ */
+PicaComicAPI.stringifyImageUrl(payload: ImageMediaPayload): string
+```
+
+### .createImageRequest
+
+```typescript
+/**
+ * Create an image request from the given image media data.
+ *
+ * @param payload - ImageMediaPayload = ImageMedia | {
+ *   path       - Path name
+ *   fileServer - File server (Optional)
+ * }
+ * @return Request (Got request)
+ */
+PicaComicAPI.createImageRequest(payload: ImageMediaPayload): got.Request
+```
+
+### .createImageRequestAsBuffer
+
+```typescript
+/**
+ * Create an image request and as buffer from the given image media data.
+ *
+ * @param payload - ImageMediaPayload = ImageMedia | {
+ *   path       - Path name
+ *   fileServer - File server (Optional)
+ * }
+ * @return Buffer
+ */
+PicaComicAPI.createImageRequestAsBuffer(payload: ImageMediaPayload): Promise<Buffer>
+```
+
 ## Client
 
 The client is just a wrapper for a single account operation, and does not need to handle the problem of token invalidation by itself.

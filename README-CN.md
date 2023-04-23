@@ -321,6 +321,51 @@ PicaComicAPI.switchComicFavourite(payload: AuthorizationPayload & ComicIdPayload
 PicaComicAPI.setUserProfileSlogan(payload: AuthorizationPayload & UserProfileSloganPayload): Promise<BaseResponse<undefined>>
 ```
 
+### .stringifyImageUrl
+
+```typescript
+/**
+ * 将给定的图像媒体数据字符串化为图像 URL 链接。
+ *
+ * @param payload - ImageMediaPayload = ImageMedia | {
+ *   path       - 路径名称
+ *   fileServer - 文件服务器（可选）
+ * }
+ * @return string
+ */
+PicaComicAPI.stringifyImageUrl(payload: ImageMediaPayload): string
+```
+
+### .createImageRequest
+
+```typescript
+/**
+ * 从给定的图像媒体数据创建一个图像请求。
+ *
+ * @param payload - ImageMediaPayload = ImageMedia | {
+ *   path       - 路径名称
+ *   fileServer - 文件服务器（可选）
+ * }
+ * @return Request (Got request)
+ */
+PicaComicAPI.createImageRequest(payload: ImageMediaPayload): got.Request
+```
+
+### .createImageRequestAsBuffer
+
+```typescript
+/**
+ * 从给定的图像媒体数据创建一个图像请求并写入到缓冲区。
+ *
+ * @param payload - ImageMediaPayload = ImageMedia | {
+ *   path       - 路径名称
+ *   fileServer - 文件服务器（可选）
+ * }
+ * @return Buffer
+ */
+PicaComicAPI.createImageRequestAsBuffer(payload: ImageMediaPayload): Promise<Buffer>
+```
+
 ## 客户端
 
 客户端只是对单个账户操作的封装，不需要自己去处理令牌失效的问题。
