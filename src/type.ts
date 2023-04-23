@@ -37,6 +37,8 @@ export interface ImageMedia {
   fileServer: string
 }
 
+export type ImageMediaPayload = ImageMedia | { path: string, fileServer?: string }
+
 export interface User {
   _id: string
   birthday: string

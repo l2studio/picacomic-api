@@ -86,4 +86,16 @@ export class PicaComicClient {
   setUserProfileSlogan (payload: types.UserProfileSloganPayload): Promise<types.BaseResponse<undefined>> {
     return this.api.setUserProfileSlogan({ token: this.token, ...payload })
   }
+
+  stringifyImageUrl (payload: types.ImageMediaPayload): string {
+    return this.api.stringifyImageUrl(payload)
+  }
+
+  createImageRequest (payload: types.ImageMediaPayload): ReturnType<PicaComicAPI['createImageRequest']> {
+    return this.api.createImageRequest(payload)
+  }
+
+  createImageRequestAsBuffer (payload: types.ImageMediaPayload): Promise<Buffer> {
+    return this.api.createImageRequestAsBuffer(payload)
+  }
 }

@@ -26,7 +26,8 @@ import {
   SearchComicsResponse,
   SwitchComicLikeResponse,
   SwitchComicFavouriteResponse,
-  UserProfileSloganPayload
+  UserProfileSloganPayload,
+  ImageMediaPayload
 } from './type'
 import { v4 as uuidv4 } from 'uuid'
 import { createHmac } from 'crypto'
@@ -298,6 +299,18 @@ function createReauthorizationTokenHook (self: PicaComicAPI): ExtendOptions {
   }
 }
 
+const ImageToBeImg = 'https://img.picacomic.com'
+const ImageToBs = 'https://storage-b.picacomic.com'
+const ImageDefault = 'https://storage1.picacomic.com'
+
+function decodeImageTobeImgPath (path: string): string {
+  if (!path.startsWith('tobeimg/')) return path
+  const filename = path.substring(path.lastIndexOf('/') + 1)
+  const encoded = filename.substring(0, filename.lastIndexOf('.'))
+  const absoluteUrl = Buffer.from(encoded, 'base64').toString('utf-8')
+  return absoluteUrl
+}
+
 export class PicaComicAPI implements FetcherInstanceHolder {
   public readonly fetch: Got
   public readonly appOptions?: Partial<PicaComicOptions>
@@ -335,4 +348,50 @@ export class PicaComicAPI implements FetcherInstanceHolder {
   readonly declare switchComicLike: PickDeclaredEndpointFromInstance<typeof Endpoints.switchComicLike>
   readonly declare switchComicFavourite: PickDeclaredEndpointFromInstance<typeof Endpoints.switchComicFavourite>
   readonly declare setUserProfileSlogan: PickDeclaredEndpointFromInstance<typeof Endpoints.setUserProfileSlogan>
+
+  readonly stringifyImageUrl = (payload: ImageMediaPayload): string => {
+    let { path, fileServer } = payload
+
+    if (path.startsWith('tobeimg/')) {
+      if (fileServer === ImageDefault || fileServer === ImageToBs) {
+        // See above
+        return decodeImageTobeImgPath(path)
+      } else {
+        fileServer ||= ImageToBeImg
+        path = '/' + path.substring(8)
+      }
+    } else if (path.startsWith('tobs/')) {
+      fileServer ||= ImageToBs
+      path = '/static/' + path.substring(5)
+    } else {
+      fileServer ||= ImageDefault
+      path = '/static/' + path
+    }
+
+    return fileServer.replace(/\/$/, '') + path
+  }
+
+  readonly createImageRequest = (payload: ImageMediaPayload) => {
+    const url = this.stringifyImageUrl(payload)
+    return this.fetch.stream({
+      prefixUrl: '',
+      url
+    })
+  }
+
+  readonly createImageRequestAsBuffer = (payload: ImageMediaPayload): Promise<Buffer> => {
+    return new Promise<Buffer>((resolve, reject) => {
+      try {
+        const request = this.createImageRequest(payload)
+        const buf: Buffer[] = []
+        request.once('error', reject)
+        request.on('data', (chunk: Buffer) => { buf.push(chunk) })
+        request.once('end', () => {
+          resolve(Buffer.concat(buf))
+        })
+      } catch (e) {
+        reject(e)
+      }
+    })
+  }
 }
